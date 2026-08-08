@@ -1,0 +1,28 @@
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Production Build Output
+dist/
+dist-ssr/
+*.local
+
+# Editor & Prompt Files
+_prompts/
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs & Temporary files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
