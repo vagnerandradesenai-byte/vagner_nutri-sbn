@@ -29,7 +29,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="badge badge-cyan">aws-sa-east-1 (São Paulo)</span>
             </div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#ffffff', marginBottom: '6px' }}>
-              Bem-vindo ao Painel Feriani Nutri
+              Bem-vindo ao Painel Vagner Nutri
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
               Gerencie suas consultas, acompanhe a evolução de seus pacientes e construa planos alimentares personalizados.

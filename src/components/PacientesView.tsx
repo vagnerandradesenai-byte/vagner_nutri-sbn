@@ -268,7 +268,7 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', padding: '32px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>{editingId ? 'Editar Anamnese de Paciente' : 'Novo Paciente Feriani Nutri'}</h3>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>{editingId ? 'Editar Anamnese de Paciente' : 'Novo Paciente Vagner Nutri'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="btn-secondary" style={{ padding: '6px' }}><X size={18} /></button>
             </div>
 

@@ -21,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, activeTab, setActiveTab, o
           </div>
           <div>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', background: 'linear-gradient(to right, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Feriani<span style={{ color: '#10b981', WebkitTextFillColor: '#10b981' }}>Nutri</span>
+              Vagner<span style={{ color: '#10b981', WebkitTextFillColor: '#10b981' }}>Nutri</span>
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#94a3b8' }}>
               <span className="badge badge-emerald" style={{ padding: '2px 6px', fontSize: '0.65rem' }}>

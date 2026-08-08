@@ -123,7 +123,7 @@ export const App: React.FC = () => {
       </main>
 
       <footer style={{ borderTop: '1px solid var(--border-color)', padding: '20px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-        Feriani Nutri &copy; {new Date().getFullYear()} — Conectado ao Neon Database (aws-sa-east-1). Todos os direitos reservados.
+        Vagner Nutri &copy; {new Date().getFullYear()} — Conectado ao Neon Database (aws-sa-east-1). Todos os direitos reservados.
       </footer>
     </div>
   );

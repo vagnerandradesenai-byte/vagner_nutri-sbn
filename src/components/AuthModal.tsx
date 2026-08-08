@@ -46,7 +46,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
             <Activity size={32} />
           </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '6px' }}>
-            {isRegister ? 'Criar Conta de Nutricionista' : 'Acessar Feriani Nutri'}
+            {isRegister ? 'Criar Conta de Nutricionista' : 'Acessar Vagner Nutri'}
           </h2>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
             {isRegister ? 'Cadastre-se para gerenciar seus pacientes' : 'Entre com suas credenciais do banco Neon'}
@@ -68,7 +68,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
                 <input
                   type="text"
                   required
-                  placeholder="Dra. Vanessa Feriani"
+                  placeholder="Dr. Vagner Andrade"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   className="form-input"
@@ -85,7 +85,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
               <input
                 type="email"
                 required
-                placeholder="nutri@ferianinutri.com.br"
+                placeholder="nutri@vagnernutri.com.br"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="form-input"

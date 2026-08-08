@@ -6,10 +6,10 @@ export const NEON_PROJECT_ID = import.meta.env.VITE_NEON_PROJECT_ID || 'withered
 
 // Armazenamento em memória / localStorage para persistência em sessão
 const STORAGE_KEYS = {
-  USER: 'feriani_user',
-  PACIENTES: 'feriani_pacientes_db',
-  CONSULTAS: 'feriani_consultas_db',
-  PLANOS: 'feriani_planos_db',
+  USER: 'vagner_user',
+  PACIENTES: 'vagner_pacientes_db',
+  CONSULTAS: 'vagner_consultas_db',
+  PLANOS: 'vagner_planos_db',
 };
 
 // --- SERVIÇO DE AUTENTICAÇÃO NEON AUTH ---
