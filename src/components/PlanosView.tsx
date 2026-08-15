@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PlanoAlimentar, Paciente, ConteudoPlanoAlimentar, Refeicao } from '../types';
-import { Utensils, Plus, Eye, Check, X, Flame, ShieldCheck } from 'lucide-react';
+import { Utensils, Plus, Eye, Check, X, Flame, ShieldCheck, Zap } from 'lucide-react';
 
 interface PlanosViewProps {
   planos: PlanoAlimentar[];
@@ -101,13 +101,13 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
       {/* Top Header */}
-      <div className="glass-panel" style={{ padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="glass-panel" style={{ padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderLeft: '4px solid #ef4444' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Planos Alimentares & Dietas</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Criação e prescrição de dietas personalizadas armazenadas em formato JSONB no Neon DB</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Criação e prescrição de dietas personalizadas com cálculo calórico e macronutrientes</p>
         </div>
 
-        <button onClick={() => setIsModalOpen(true)} className="btn-primary">
+        <button onClick={() => setIsModalOpen(true)} className="btn-red">
           <Plus size={18} /> Criar Plano Alimentar
         </button>
       </div>
@@ -115,26 +115,35 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
       {/* Plan Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
         {planos.map((plano) => (
-          <div key={plano.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div key={plano.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '3px solid #ef4444' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>{plano.conteudo.titulo_plano}</h3>
-                <span className="badge badge-emerald"><Flame size={12} /> {plano.conteudo.meta_calorica} kcal</span>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>{plano.conteudo.titulo_plano}</h3>
+                <span className="badge badge-red"><Flame size={12} /> {plano.conteudo.meta_calorica} kcal</span>
               </div>
 
-              <div style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: 600, marginBottom: '12px' }}>
+              <div style={{ fontSize: '0.9rem', color: '#60a5fa', fontWeight: 600, marginBottom: '12px' }}>
                 Paciente: {getPacienteNome(plano.paciente_id)}
               </div>
 
-              <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                <div><strong>Proteínas:</strong> {plano.conteudo.macro_proteinas}</div>
-                <div><strong>Carboidratos:</strong> {plano.conteudo.macro_carboidratos}</div>
-                <div><strong>Gorduras:</strong> {plano.conteudo.macro_gorduras}</div>
+              <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ color: '#60a5fa' }}>🍗 Proteínas:</span>
+                  <strong>{plano.conteudo.macro_proteinas}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ color: '#34d399' }}>🌾 Carboidratos:</span>
+                  <strong>{plano.conteudo.macro_carboidratos}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#f87171' }}>🥑 Gorduras:</span>
+                  <strong>{plano.conteudo.macro_gorduras}</strong>
+                </div>
               </div>
             </div>
 
-            <button onClick={() => setSelectedPlano(plano)} className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
-              <Eye size={16} /> Visualizar Dieta Completa
+            <button onClick={() => setSelectedPlano(plano)} className="btn-secondary" style={{ width: '100%', justifyContent: 'center', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+              <Eye size={16} color="#f87171" /> Visualizar Dieta Completa
             </button>
           </div>
         ))}
@@ -142,25 +151,25 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
 
       {/* Visualizar Dieta Modal */}
       {selectedPlano && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto', padding: '32px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
               <div>
                 <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>{selectedPlano.conteudo.titulo_plano}</h3>
-                <span style={{ fontSize: '0.85rem', color: '#38bdf8' }}>Paciente: {getPacienteNome(selectedPlano.paciente_id)}</span>
+                <span style={{ fontSize: '0.85rem', color: '#60a5fa', fontWeight: 600 }}>Paciente: {getPacienteNome(selectedPlano.paciente_id)}</span>
               </div>
               <button onClick={() => setSelectedPlano(null)} className="btn-secondary" style={{ padding: '6px' }}><X size={18} /></button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <span className="badge badge-emerald" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🔥 {selectedPlano.conteudo.meta_calorica} kcal / dia</span>
-                <span className="badge badge-cyan" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🍗 Prot: {selectedPlano.conteudo.macro_proteinas}</span>
-                <span className="badge badge-amber" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🥑 Gord: {selectedPlano.conteudo.macro_gorduras}</span>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <span className="badge badge-red" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🔥 {selectedPlano.conteudo.meta_calorica} kcal / dia</span>
+                <span className="badge badge-blue" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🍗 Prot: {selectedPlano.conteudo.macro_proteinas}</span>
+                <span className="badge badge-green" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🌾 Carb: {selectedPlano.conteudo.macro_carboidratos}</span>
               </div>
 
-              <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '14px 18px', borderRadius: '10px', fontSize: '0.875rem', color: '#e2e8f0' }}>
-                <strong>Observações Gerais do Nutricionista:</strong>
+              <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '14px 18px', borderRadius: '10px', fontSize: '0.875rem', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <strong style={{ color: '#60a5fa' }}>Observações do Nutricionista:</strong>
                 <p style={{ marginTop: '4px', color: 'var(--text-muted)' }}>{selectedPlano.conteudo.observacoes_gerais}</p>
               </div>
 
@@ -168,13 +177,13 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
                 {selectedPlano.conteudo.refeicoes.map((ref, idx) => (
                   <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <h4 style={{ fontWeight: 700, color: '#38bdf8' }}>{ref.titulo}</h4>
-                      <span className="badge badge-cyan">{ref.horario}</span>
+                      <h4 style={{ fontWeight: 700, color: '#60a5fa' }}>{ref.titulo}</h4>
+                      <span className="badge badge-blue">{ref.horario}</span>
                     </div>
                     <ul style={{ paddingLeft: '20px', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
                       {ref.itens.map((item, itemIdx) => (
                         <li key={itemIdx} style={{ marginBottom: '4px' }}>
-                          <strong style={{ color: '#fff' }}>{item.alimento}</strong> — {item.quantidade}
+                          <strong style={{ color: '#fff' }}>{item.alimento}</strong> — <span style={{ color: '#34d399' }}>{item.quantidade}</span>
                         </li>
                       ))}
                     </ul>
@@ -188,8 +197,8 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
 
       {/* Modal Criar Plano */}
       {isModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', padding: '32px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Prescrever Novo Plano Alimentar</h3>
               <button onClick={() => setIsModalOpen(false)} className="btn-secondary" style={{ padding: '6px' }}><X size={18} /></button>
@@ -198,7 +207,7 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className="form-group">
                 <label className="form-label">Paciente Destino *</label>
-                <select required value={pacienteId} onChange={(e) => setPacienteId(e.target.value)} className="form-input">
+                <select required value={pacienteId} onChange={(e) => setPacienteId(e.target.value)} className="form-input" style={{ borderColor: 'rgba(239, 68, 68, 0.3)' }}>
                   {pacientes.map((p) => (
                     <option key={p.id} value={p.id}>{p.nome}</option>
                   ))}
@@ -224,7 +233,7 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
               <div style={{ marginTop: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <h4 style={{ fontWeight: 700 }}>Refeições do Plano</h4>
-                  <button type="button" onClick={handleAddRefeicao} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>
+                  <button type="button" onClick={handleAddRefeicao} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.8rem', color: '#60a5fa' }}>
                     + Adicionar Refeição
                   </button>
                 </div>
@@ -261,7 +270,7 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary" style={{ marginTop: '14px', padding: '12px' }}>
+              <button type="submit" className="btn-red" style={{ marginTop: '14px', padding: '12px' }}>
                 <Check size={18} /> Salvar Plano Alimentar no Neon DB
               </button>
             </form>

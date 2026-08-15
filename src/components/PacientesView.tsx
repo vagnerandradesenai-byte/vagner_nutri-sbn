@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Paciente, Nutricionista } from '../types';
-import { Users, Plus, Search, User, Phone, Mail, FileText, Trash2, Edit3, X, Check, Activity, Crown, Filter, Sparkles, Stethoscope } from 'lucide-react';
+import { Users, Plus, Search, User, Phone, Mail, FileText, Trash2, Edit3, X, Check, Activity, Crown, Filter, Sparkles, Stethoscope, AlertCircle, Heart } from 'lucide-react';
 import { AuthService, DbService } from '../lib/neon';
 
 interface PacientesViewProps {
@@ -164,11 +164,11 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
-      {/* Master Banner / Status */}
+      {/* Master Banner */}
       {isMaster && (
         <div style={{
-          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%)',
-          border: '1px solid rgba(245, 158, 11, 0.35)',
+          background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(16, 185, 129, 0.1) 50%, rgba(239, 68, 68, 0.08) 100%)',
+          border: '1px solid rgba(59, 130, 246, 0.35)',
           borderRadius: '16px',
           padding: '20px 24px',
           display: 'flex',
@@ -183,7 +183,7 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fef08a', margin: 0 }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
                   Visão Master Global — Todos os Pacientes
                 </h3>
                 <span className="badge badge-amber" style={{ fontSize: '0.7rem' }}>
@@ -191,18 +191,18 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
                 </span>
               </div>
               <p style={{ fontSize: '0.85rem', color: '#cbd5e1', margin: '4px 0 0 0' }}>
-                Você tem visualização completa de todos os <strong>{pacientes.length} pacientes</strong> cadastrados por todos os profissionais da clínica.
+                Visualizando a base completa de <strong>{pacientes.length} pacientes</strong> cadastrados no Neon PostgreSQL.
               </p>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
-            <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.3)', padding: '8px 14px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-              <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block' }}>Total de Nutricionistas</span>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fbbf24' }}>{nutrisList.length}</span>
+            <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.3)', padding: '8px 14px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block' }}>Nutricionistas</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#60a5fa' }}>{nutrisList.length}</span>
             </div>
-            <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.3)', padding: '8px 14px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-              <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block' }}>Base Global de Pacientes</span>
+            <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.3)', padding: '8px 14px', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block' }}>Pacientes</span>
               <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#34d399' }}>{pacientes.length}</span>
             </div>
           </div>
@@ -210,13 +210,13 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
       )}
 
       {/* Header Bar */}
-      <div className="glass-panel" style={{ padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="glass-panel" style={{ padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderLeft: '4px solid #10b981' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Gestão de Pacientes</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Anamnese completa e histórico dos pacientes no Neon Database</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Anamnese clínica completa e histórico dos pacientes no Neon Database</p>
         </div>
 
-        <button onClick={openNewForm} className="btn-primary">
+        <button onClick={openNewForm} className="btn-green">
           <Plus size={18} /> Novo Paciente
         </button>
       </div>
@@ -224,14 +224,14 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
       {/* Search & Filter Controls */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: '260px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: '#64748b' }} />
+          <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: '#60a5fa' }} />
           <input
             type="text"
             placeholder={isMaster ? "Buscar por paciente, e-mail ou nutricionista responsável..." : "Buscar por nome, e-mail ou WhatsApp..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="form-input"
-            style={{ width: '100%', paddingLeft: '46px', paddingRight: '16px', height: '46px', fontSize: '0.95rem' }}
+            style={{ width: '100%', paddingLeft: '46px', paddingRight: '16px', height: '46px', fontSize: '0.95rem', borderColor: 'rgba(59, 130, 246, 0.3)' }}
           />
         </div>
 
@@ -241,7 +241,7 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
               value={selectedNutriFilter}
               onChange={(e) => setSelectedNutriFilter(e.target.value)}
               className="form-input"
-              style={{ height: '46px', fontSize: '0.9rem', paddingLeft: '14px', width: '100%', cursor: 'pointer' }}
+              style={{ height: '46px', fontSize: '0.9rem', paddingLeft: '14px', width: '100%', cursor: 'pointer', borderColor: 'rgba(37, 99, 235, 0.4)' }}
             >
               <option value="all">👥 Todos os Nutricionistas ({pacientes.length})</option>
               {nutrisList.map((n) => {
@@ -260,7 +260,7 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
       {/* Patient Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
         {filtered.map((paciente) => (
-          <div key={paciente.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div key={paciente.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '3px solid #2563eb' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                 <div>
@@ -268,7 +268,7 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
                   <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{paciente.sexo || 'Gênero não informado'}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => handleEdit(paciente)} className="btn-secondary" style={{ padding: '6px', borderRadius: '6px' }} title="Editar paciente">
+                  <button onClick={() => handleEdit(paciente)} className="btn-secondary" style={{ padding: '6px', borderRadius: '6px', color: '#60a5fa' }} title="Editar paciente">
                     <Edit3 size={14} />
                   </button>
                   <button onClick={() => onDeletePaciente(paciente.id)} className="btn-secondary" style={{ padding: '6px', borderRadius: '6px', color: '#f87171' }} title="Excluir paciente">
@@ -280,15 +280,15 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
               {/* Master Tag: Nutricionista Responsável */}
               {isMaster && (
                 <div style={{
-                  background: 'rgba(30, 41, 59, 0.7)',
-                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  background: 'rgba(37, 99, 235, 0.12)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
                   padding: '6px 10px',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
                   fontSize: '0.75rem',
-                  color: '#38bdf8',
+                  color: '#60a5fa',
                   marginBottom: '14px'
                 }}>
                   <Stethoscope size={13} />
@@ -298,20 +298,23 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Phone size={14} color="#38bdf8" /> {paciente.whatsapp || 'WhatsApp não informado'}
+                  <Phone size={14} color="#60a5fa" /> {paciente.whatsapp || 'WhatsApp não informado'}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Mail size={14} color="#38bdf8" /> {paciente.email || 'E-mail não informado'}
+                  <Mail size={14} color="#60a5fa" /> {paciente.email || 'E-mail não informado'}
                 </div>
               </div>
 
-              {/* Badges */}
+              {/* Badges: Verde para Objetivos, Vermelho para Restrições/Alergias */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
                 {paciente.objetivos?.map((obj, i) => (
-                  <span key={i} className="badge badge-emerald">{obj}</span>
+                  <span key={i} className="badge badge-green">{obj}</span>
                 ))}
                 {paciente.restricoes_alimentares?.map((rest, i) => (
-                  <span key={i} className="badge badge-amber">{rest}</span>
+                  <span key={i} className="badge badge-red">{rest}</span>
+                ))}
+                {paciente.alergias?.map((alerg, i) => (
+                  <span key={i} className="badge badge-red" style={{ background: 'rgba(225, 29, 72, 0.2)' }}>⚠️ {alerg}</span>
                 ))}
               </div>
             </div>
@@ -319,9 +322,9 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
             <button
               onClick={() => setSelectedPaciente(paciente)}
               className="btn-secondary"
-              style={{ width: '100%', justifyContent: 'center', fontSize: '0.85rem', marginTop: '12px' }}
+              style={{ width: '100%', justifyContent: 'center', fontSize: '0.85rem', marginTop: '12px', borderColor: 'rgba(59, 130, 246, 0.3)' }}
             >
-              <FileText size={16} /> Ver Anamnese Completa
+              <FileText size={16} color="#60a5fa" /> Ver Anamnese Completa
             </button>
           </div>
         ))}
@@ -329,15 +332,15 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
 
       {/* Modal Anamnese Completa */}
       {selectedPaciente && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99, padding: '20px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto', padding: '32px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99, padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
               <div>
                 <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Ficha de Anamnese — {selectedPaciente.nome}</h3>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                  <span className="badge badge-emerald">Neon PostgreSQL Record</span>
+                  <span className="badge badge-green">Neon PostgreSQL Record</span>
                   {selectedPaciente.nutricionista_nome && (
-                    <span className="badge badge-cyan">Nutri: {selectedPaciente.nutricionista_nome}</span>
+                    <span className="badge badge-blue">Nutri: {selectedPaciente.nutricionista_nome}</span>
                   )}
                 </div>
               </div>
@@ -345,25 +348,25 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', fontSize: '0.9rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'rgba(15, 23, 42, 0.6)', padding: '16px', borderRadius: '12px' }}>
-                <div><strong>Peso Inicial:</strong> {selectedPaciente.peso_inicial ? `${selectedPaciente.peso_inicial} kg` : 'N/I'}</div>
-                <div><strong>Altura:</strong> {selectedPaciente.altura ? `${selectedPaciente.altura} m` : 'N/I'}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'rgba(15, 23, 42, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <div><strong>Peso Inicial:</strong> <span style={{ color: '#34d399' }}>{selectedPaciente.peso_inicial ? `${selectedPaciente.peso_inicial} kg` : 'N/I'}</span></div>
+                <div><strong>Altura:</strong> <span style={{ color: '#60a5fa' }}>{selectedPaciente.altura ? `${selectedPaciente.altura} m` : 'N/I'}</span></div>
                 <div><strong>Refeições/dia:</strong> {selectedPaciente.refeicoes_por_dia || 'N/I'}</div>
                 <div><strong>Ingestão de Água:</strong> {selectedPaciente.litros_agua ? `${selectedPaciente.litros_agua} L/dia` : 'N/I'}</div>
               </div>
 
               <div>
-                <strong>Objetivos:</strong>
+                <strong style={{ color: '#34d399' }}>Objetivos:</strong>
                 <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>{selectedPaciente.objetivo_texto || selectedPaciente.objetivos?.join(', ') || 'Nenhum informado'}</p>
               </div>
 
               <div>
-                <strong>Atividade Física:</strong>
+                <strong style={{ color: '#60a5fa' }}>Atividade Física:</strong>
                 <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>{selectedPaciente.atividade_fisica ? `Sim (${selectedPaciente.atividade_fisica_descricao || 'Sem descrição'})` : 'Não pratica'}</p>
               </div>
 
               <div>
-                <strong>Restrições & Alergias:</strong>
+                <strong style={{ color: '#f87171' }}>Restrições & Alergias:</strong>
                 <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
                   {selectedPaciente.restricoes_alimentares?.length ? `Restrições: ${selectedPaciente.restricoes_alimentares.join(', ')}` : 'Sem restrições declaradas.'}
                 </p>
@@ -380,8 +383,8 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
 
       {/* Modal Cadastro/Edição de Paciente */}
       {isModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', padding: '32px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>{editingId ? 'Editar Anamnese de Paciente' : 'Novo Paciente Vagner Nutri'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="btn-secondary" style={{ padding: '6px' }}><X size={18} /></button>
@@ -389,8 +392,8 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {isMaster && (
-                <div className="form-group" style={{ background: 'rgba(245, 158, 11, 0.08)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
-                  <label className="form-label" style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="form-group" style={{ background: 'rgba(37, 99, 235, 0.12)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.35)' }}>
+                  <label className="form-label" style={{ color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Crown size={14} /> Nutricionista Responsável pelo Atendimento
                   </label>
                   <select
@@ -447,7 +450,7 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
                 <textarea rows={3} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} className="form-input" placeholder="Preferências alimentares, hábitos..." />
               </div>
 
-              <button type="submit" className="btn-primary" style={{ marginTop: '12px', padding: '12px' }}>
+              <button type="submit" className="btn-green" style={{ marginTop: '12px', padding: '12px' }}>
                 <Check size={18} /> Salvar no Banco Neon
               </button>
             </form>

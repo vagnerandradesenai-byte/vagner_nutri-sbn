@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AuthService } from '../lib/neon';
 import { Nutricionista } from '../types';
-import { Lock, Mail, User, ShieldCheck, ArrowRight, Activity, Crown, Sparkles, CheckCircle } from 'lucide-react';
+import { Lock, Mail, User, ShieldCheck, ArrowRight, HeartPulse, Crown, Sparkles, CheckCircle } from 'lucide-react';
 
 interface AuthModalProps {
   onLoginSuccess: (user: Nutricionista) => void;
@@ -47,24 +47,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '480px', padding: '36px 32px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.12)' }}>
+      <div className="glass-panel" style={{ width: '100%', maxWidth: '480px', padding: '36px 32px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
         
-        {/* Header */}
+        {/* Header with Tricolor Icon */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ display: 'inline-flex', background: 'var(--primary-gradient)', padding: '14px', borderRadius: '16px', color: '#fff', marginBottom: '14px', boxShadow: '0 8px 24px rgba(16,185,129,0.35)' }}>
-            <Activity size={32} />
+          <div style={{ display: 'inline-flex', background: 'linear-gradient(135deg, #2563eb 0%, #10b981 100%)', padding: '14px', borderRadius: '16px', color: '#fff', marginBottom: '14px', boxShadow: '0 8px 24px rgba(37,99,235,0.4)' }}>
+            <HeartPulse size={32} />
           </div>
           <h2 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '6px', letterSpacing: '-0.02em' }}>
-            {isRegister ? 'Criar Conta de Nutricionista' : 'Acessar Vagner Nutri'}
+            <span style={{ color: '#60a5fa' }}>Vagner</span><span style={{ color: '#34d399' }}>Nutri</span>
           </h2>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            {isRegister ? 'Cadastre-se para gerenciar seus pacientes' : 'Plataforma integrada ao Neon PostgreSQL'}
+            {isRegister ? 'Cadastre-se para gerenciar seus pacientes' : 'Plataforma integrada ao Neon PostgreSQL (aws-sa-east-1)'}
           </p>
         </div>
 
         {/* Master Quick Access Highlight */}
         <div style={{
-          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.22) 100%)',
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(239, 68, 68, 0.15) 100%)',
           border: '1px solid rgba(245, 158, 11, 0.4)',
           borderRadius: '14px',
           padding: '16px',
@@ -80,7 +80,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
               </div>
               <div>
                 <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fbbf24' }}>Acesso Master Geral</span>
-                <p style={{ fontSize: '0.75rem', color: '#e2e8f0', margin: 0 }}>Visão completa de todos os pacientes e nutricionistas</p>
+                <p style={{ fontSize: '0.75rem', color: '#e2e8f0', margin: 0 }}>Visão completa de todos os pacientes e equipe</p>
               </div>
             </div>
             <span className="badge badge-amber" style={{ fontSize: '0.65rem', padding: '2px 8px' }}>
@@ -93,8 +93,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
             onClick={handleMasterDirectLogin}
             disabled={loading}
             style={{
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              color: '#0f172a',
+              background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+              color: '#ffffff',
               fontWeight: 700,
               fontSize: '0.875rem',
               padding: '10px 16px',
@@ -106,7 +106,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
               justifyContent: 'center',
               gap: '8px',
               transition: 'all 0.2s ease',
-              boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)'
+              boxShadow: '0 4px 14px rgba(239, 68, 68, 0.35)'
             }}
           >
             <Crown size={16} /> Entrar como Master (Dr. Vagner)
@@ -130,7 +130,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
             <div className="form-group">
               <label className="form-label">Nome Completo</label>
               <div style={{ position: 'relative' }}>
-                <User size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#64748b' }} />
+                <User size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#60a5fa' }} />
                 <input
                   type="text"
                   required
@@ -147,7 +147,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
           <div className="form-group">
             <label className="form-label">E-mail Profissional</label>
             <div style={{ position: 'relative' }}>
-              <Mail size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#64748b' }} />
+              <Mail size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#60a5fa' }} />
               <input
                 type="email"
                 required
@@ -163,7 +163,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
           <div className="form-group">
             <label className="form-label">Senha</label>
             <div style={{ position: 'relative' }}>
-              <Lock size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#64748b' }} />
+              <Lock size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#60a5fa' }} />
               <input
                 type="password"
                 required
@@ -194,7 +194,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
               setIsRegister(!isRegister);
               setError('');
             }}
-            style={{ background: 'none', color: '#38bdf8', fontSize: '0.875rem', fontWeight: 500 }}
+            style={{ background: 'none', color: '#60a5fa', fontSize: '0.875rem', fontWeight: 500 }}
           >
             {isRegister ? 'Já possui uma conta? Faça login' : 'Não tem conta? Cadastre-se aqui'}
           </button>
