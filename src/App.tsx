@@ -37,6 +37,7 @@ export const App: React.FC = () => {
 
   const handleLoginSuccess = (nutricionista: Nutricionista) => {
     setUser(nutricionista);
+    refreshData();
   };
 
   const handleLogout = () => {
@@ -82,6 +83,7 @@ export const App: React.FC = () => {
           <>
             {activeTab === 'dashboard' && (
               <DashboardView
+                user={user}
                 pacientes={pacientes}
                 consultas={consultas}
                 planos={planos}
@@ -95,6 +97,7 @@ export const App: React.FC = () => {
 
             {activeTab === 'pacientes' && (
               <PacientesView
+                user={user}
                 pacientes={pacientes}
                 onSavePaciente={handleSavePaciente}
                 onDeletePaciente={handleDeletePaciente}

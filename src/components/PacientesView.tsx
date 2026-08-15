@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Paciente } from '../types';
-import { Users, Plus, Search, User, Phone, Mail, FileText, Trash2, Edit3, X, Check, Activity } from 'lucide-react';
+import { Paciente, Nutricionista } from '../types';
+import { Users, Plus, Search, User, Phone, Mail, FileText, Trash2, Edit3, X, Check, Activity, Crown, Filter, Sparkles, Stethoscope } from 'lucide-react';
+import { AuthService, DbService } from '../lib/neon';
 
 interface PacientesViewProps {
   pacientes: Paciente[];
+  user: Nutricionista | null;
   onSavePaciente: (paciente: Omit<Paciente, 'id' | 'created_at'> & { id?: string }) => void;
   onDeletePaciente: (id: string) => void;
   showModalInitially?: boolean;
@@ -12,12 +14,17 @@ interface PacientesViewProps {
 
 export const PacientesView: React.FC<PacientesViewProps> = ({
   pacientes,
+  user,
   onSavePaciente,
   onDeletePaciente,
   showModalInitially = false,
   onCloseInitialModal,
 }) => {
+  const isMaster = AuthService.isMasterUser(user);
+  const nutrisList = DbService.getNutricionistas();
+
   const [search, setSearch] = useState('');
+  const [selectedNutriFilter, setSelectedNutriFilter] = useState<string>('all');
   const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(showModalInitially);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -45,6 +52,7 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
   const [atividadeFisica, setAtividadeFisica] = useState(true);
   const [atividadeFisicaDesc, setAtividadeFisicaDesc] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  const [nutricionistaResponsavelId, setNutricionistaResponsavelId] = useState(user?.id || 'master-vagner-001');
 
   const openNewForm = () => {
     setEditingId(null);
@@ -70,6 +78,7 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
     setAtividadeFisica(true);
     setAtividadeFisicaDesc('');
     setObservacoes('');
+    setNutricionistaResponsavelId(user?.id || 'master-vagner-001');
     setIsModalOpen(true);
   };
 
@@ -97,13 +106,18 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
     setAtividadeFisica(p.atividade_fisica ?? true);
     setAtividadeFisicaDesc(p.atividade_fisica_descricao || '');
     setObservacoes(p.observacoes || '');
+    setNutricionistaResponsavelId(p.nutricionista_id || user?.id || 'master-vagner-001');
     setIsModalOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const targetNutri = nutrisList.find(n => n.id === nutricionistaResponsavelId) || user;
+
     onSavePaciente({
       id: editingId || undefined,
+      nutricionista_id: targetNutri?.id || user?.id,
+      nutricionista_nome: targetNutri?.nome || user?.nome || 'Dr. Vagner Andrade (Master)',
       nome,
       email,
       whatsapp,
@@ -131,21 +145,75 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
     if (onCloseInitialModal) onCloseInitialModal();
   };
 
-  const filtered = pacientes.filter(
-    (p) =>
+  // Filtragem
+  const filtered = pacientes.filter((p) => {
+    const matchesSearch =
       p.nome.toLowerCase().includes(search.toLowerCase()) ||
       p.email?.toLowerCase().includes(search.toLowerCase()) ||
-      p.whatsapp?.includes(search)
-  );
+      p.whatsapp?.includes(search) ||
+      p.nutricionista_nome?.toLowerCase().includes(search.toLowerCase());
+
+    const matchesNutri =
+      selectedNutriFilter === 'all' ||
+      p.nutricionista_id === selectedNutriFilter ||
+      p.nutricionista_nome?.toLowerCase().includes(selectedNutriFilter.toLowerCase());
+
+    return matchesSearch && matchesNutri;
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
+      {/* Master Banner / Status */}
+      {isMaster && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%)',
+          border: '1px solid rgba(245, 158, 11, 0.35)',
+          borderRadius: '16px',
+          padding: '20px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ background: '#f59e0b', color: '#0f172a', padding: '10px', borderRadius: '12px', display: 'flex' }}>
+              <Crown size={26} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fef08a', margin: 0 }}>
+                  Visão Master Global — Todos os Pacientes
+                </h3>
+                <span className="badge badge-amber" style={{ fontSize: '0.7rem' }}>
+                  Acesso Irrestrito
+                </span>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: '#cbd5e1', margin: '4px 0 0 0' }}>
+                Você tem visualização completa de todos os <strong>{pacientes.length} pacientes</strong> cadastrados por todos os profissionais da clínica.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.3)', padding: '8px 14px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block' }}>Total de Nutricionistas</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fbbf24' }}>{nutrisList.length}</span>
+            </div>
+            <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.3)', padding: '8px 14px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block' }}>Base Global de Pacientes</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#34d399' }}>{pacientes.length}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header Bar */}
       <div className="glass-panel" style={{ padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Gestão de Pacientes</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Anamnese completa e histórico dos pacientes cadastrados no banco Neon</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Anamnese completa e histórico dos pacientes no Neon Database</p>
         </div>
 
         <button onClick={openNewForm} className="btn-primary">
@@ -153,27 +221,50 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
         </button>
       </div>
 
-      {/* Search Input */}
-      <div style={{ position: 'relative' }}>
-        <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: '#64748b' }} />
-        <input
-          type="text"
-          placeholder="Buscar por nome, e-mail ou WhatsApp..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="form-input"
-          style={{ width: '100%', paddingLeft: '46px', paddingRight: '16px', height: '46px', fontSize: '0.95rem' }}
-        />
+      {/* Search & Filter Controls */}
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: '260px' }}>
+          <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: '#64748b' }} />
+          <input
+            type="text"
+            placeholder={isMaster ? "Buscar por paciente, e-mail ou nutricionista responsável..." : "Buscar por nome, e-mail ou WhatsApp..."}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="form-input"
+            style={{ width: '100%', paddingLeft: '46px', paddingRight: '16px', height: '46px', fontSize: '0.95rem' }}
+          />
+        </div>
+
+        {isMaster && (
+          <div style={{ minWidth: '220px', position: 'relative' }}>
+            <select
+              value={selectedNutriFilter}
+              onChange={(e) => setSelectedNutriFilter(e.target.value)}
+              className="form-input"
+              style={{ height: '46px', fontSize: '0.9rem', paddingLeft: '14px', width: '100%', cursor: 'pointer' }}
+            >
+              <option value="all">👥 Todos os Nutricionistas ({pacientes.length})</option>
+              {nutrisList.map((n) => {
+                const count = pacientes.filter(p => p.nutricionista_id === n.id || p.nutricionista_nome === n.nome).length;
+                return (
+                  <option key={n.id} value={n.id}>
+                    {n.nome} ({count})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Patient Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
         {filtered.map((paciente) => (
           <div key={paciente.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>{paciente.nome}</h3>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>{paciente.nome}</h3>
                   <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{paciente.sexo || 'Gênero não informado'}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
@@ -185,6 +276,25 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
                   </button>
                 </div>
               </div>
+
+              {/* Master Tag: Nutricionista Responsável */}
+              {isMaster && (
+                <div style={{
+                  background: 'rgba(30, 41, 59, 0.7)',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.75rem',
+                  color: '#38bdf8',
+                  marginBottom: '14px'
+                }}>
+                  <Stethoscope size={13} />
+                  <span>Resp: <strong>{paciente.nutricionista_nome || 'Dr. Vagner Andrade (Master)'}</strong></span>
+                </div>
+              )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -224,7 +334,12 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
               <div>
                 <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Ficha de Anamnese — {selectedPaciente.nome}</h3>
-                <span className="badge badge-emerald" style={{ marginTop: '4px' }}>Neon PostgreSQL Record</span>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                  <span className="badge badge-emerald">Neon PostgreSQL Record</span>
+                  {selectedPaciente.nutricionista_nome && (
+                    <span className="badge badge-cyan">Nutri: {selectedPaciente.nutricionista_nome}</span>
+                  )}
+                </div>
               </div>
               <button onClick={() => setSelectedPaciente(null)} className="btn-secondary" style={{ padding: '6px' }}><X size={18} /></button>
             </div>
@@ -273,6 +388,24 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {isMaster && (
+                <div className="form-group" style={{ background: 'rgba(245, 158, 11, 0.08)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                  <label className="form-label" style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Crown size={14} /> Nutricionista Responsável pelo Atendimento
+                  </label>
+                  <select
+                    value={nutricionistaResponsavelId}
+                    onChange={(e) => setNutricionistaResponsavelId(e.target.value)}
+                    className="form-input"
+                    style={{ width: '100%', marginTop: '4px' }}
+                  >
+                    {nutrisList.map(n => (
+                      <option key={n.id} value={n.id}>{n.nome} ({n.crm || 'CRN'})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="form-group">
                   <label className="form-label">Nome Completo *</label>

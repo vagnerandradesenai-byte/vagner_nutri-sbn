@@ -2,12 +2,16 @@ export interface Nutricionista {
   id: string;
   nome: string;
   email: string;
+  role?: 'master' | 'admin' | 'nutricionista';
+  is_master?: boolean;
+  crm?: string;
   created_at?: string;
 }
 
 export interface Paciente {
   id: string;
   nutricionista_id?: string;
+  nutricionista_nome?: string;
   nome: string;
   data_nascimento?: string;
   sexo?: string;
@@ -36,6 +40,8 @@ export interface Paciente {
 export interface Consulta {
   id: string;
   paciente_id: string;
+  nutricionista_id?: string;
+  nutricionista_nome?: string;
   data_consulta: string;
   peso?: number;
   cintura?: number;
@@ -74,6 +80,8 @@ export interface ConteudoPlanoAlimentar {
 export interface PlanoAlimentar {
   id: string;
   paciente_id: string;
+  nutricionista_id?: string;
+  nutricionista_nome?: string;
   conteudo: ConteudoPlanoAlimentar;
   created_at?: string;
 }

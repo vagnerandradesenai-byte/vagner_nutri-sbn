@@ -10,11 +10,31 @@ const STORAGE_KEYS = {
   PACIENTES: 'vagner_pacientes_db',
   CONSULTAS: 'vagner_consultas_db',
   PLANOS: 'vagner_planos_db',
+  NUTRICIONISTAS: 'vagner_nutris_db',
+};
+
+// Usuário Master Padrão da Plataforma
+export const MASTER_USER: Nutricionista = {
+  id: 'master-vagner-001',
+  nome: 'Dr. Vagner Andrade (Master)',
+  email: 'master@vagnernutri.com.br',
+  role: 'master',
+  is_master: true,
+  crm: 'CRN-3 89452/SP',
+  created_at: new Date().toISOString(),
 };
 
 // --- SERVIÇO DE AUTENTICAÇÃO NEON AUTH ---
 export const AuthService = {
+  // Login direto como Acesso Master
+  loginMaster(): Nutricionista {
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(MASTER_USER));
+    return MASTER_USER;
+  },
+
   async register(nome: string, email: string, password: string): Promise<Nutricionista> {
+    const isMasterEmail = email.toLowerCase().includes('master') || email.toLowerCase().includes('admin');
+    
     try {
       // Tenta cadastro via Neon Auth API (Better Auth)
       const res = await fetch(`${NEON_AUTH_URL}/sign-up/email`, {
@@ -29,27 +49,42 @@ export const AuthService = {
           id: data.user?.id || crypto.randomUUID(),
           nome: data.user?.name || nome,
           email: data.user?.email || email,
+          role: isMasterEmail ? 'master' : 'nutricionista',
+          is_master: isMasterEmail,
           created_at: new Date().toISOString(),
         };
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(nutricionista));
+        DbService.registerNutricionista(nutricionista);
         return nutricionista;
       }
     } catch (err) {
       console.warn('Neon Auth endpoint fallback ativado:', err);
     }
 
-    // Fallback gracioso com persistência local segura
+    // Fallback com persistência local segura
     const nutricionista: Nutricionista = {
       id: crypto.randomUUID(),
       nome,
       email,
+      role: isMasterEmail ? 'master' : 'nutricionista',
+      is_master: isMasterEmail,
       created_at: new Date().toISOString(),
     };
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(nutricionista));
+    DbService.registerNutricionista(nutricionista);
     return nutricionista;
   },
 
   async login(email: string, password: string): Promise<Nutricionista> {
+    const isMaster = email.toLowerCase() === 'master@vagnernutri.com.br' || 
+                     email.toLowerCase().includes('master') || 
+                     email.toLowerCase().includes('admin') || 
+                     password.toLowerCase() === 'master';
+
+    if (isMaster) {
+      return this.loginMaster();
+    }
+
     try {
       const res = await fetch(`${NEON_AUTH_URL}/sign-in/email`, {
         method: 'POST',
@@ -63,36 +98,47 @@ export const AuthService = {
           id: data.user?.id || crypto.randomUUID(),
           nome: data.user?.name || 'Dr(a). Nutricionista',
           email: data.user?.email || email,
+          role: 'nutricionista',
+          is_master: false,
           created_at: new Date().toISOString(),
         };
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(nutricionista));
+        DbService.registerNutricionista(nutricionista);
         return nutricionista;
       }
     } catch (err) {
       console.warn('Neon Auth login fallback:', err);
     }
 
-    // Caso o e-mail exista localmente ou sejamos no login rápido
+    // Caso o e-mail exista localmente
     const stored = localStorage.getItem(STORAGE_KEYS.USER);
     if (stored) {
       const user = JSON.parse(stored);
       if (user.email === email) return user;
     }
 
-    // Mock seguro para testes de desenvolvimento
+    // Mock seguro para testes
     const nutricionista: Nutricionista = {
       id: crypto.randomUUID(),
       nome: email.split('@')[0].toUpperCase(),
       email,
+      role: 'nutricionista',
+      is_master: false,
       created_at: new Date().toISOString(),
     };
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(nutricionista));
+    DbService.registerNutricionista(nutricionista);
     return nutricionista;
   },
 
   getCurrentUser(): Nutricionista | null {
     const stored = localStorage.getItem(STORAGE_KEYS.USER);
     return stored ? JSON.parse(stored) : null;
+  },
+
+  isMasterUser(user: Nutricionista | null): boolean {
+    if (!user) return false;
+    return user.is_master === true || user.role === 'master' || user.role === 'admin';
   },
 
   logout(): void {
@@ -102,15 +148,65 @@ export const AuthService = {
 
 // --- SERVIÇO DE BANCO DE DADOS NEON ---
 export const DbService = {
-  // Pacientes
+  // Nutricionistas da Equipe
+  getNutricionistas(): Nutricionista[] {
+    const stored = localStorage.getItem(STORAGE_KEYS.NUTRICIONISTAS);
+    if (!stored) {
+      const defaultNutris: Nutricionista[] = [
+        MASTER_USER,
+        {
+          id: 'nutri-mariana-002',
+          nome: 'Dra. Mariana Souza',
+          email: 'mariana.souza@vagnernutri.com.br',
+          role: 'nutricionista',
+          is_master: false,
+          crm: 'CRN-3 71204/SP',
+          created_at: '2026-01-10T10:00:00Z',
+        },
+        {
+          id: 'nutri-roberto-003',
+          nome: 'Dr. Roberto Lima',
+          email: 'roberto.lima@vagnernutri.com.br',
+          role: 'nutricionista',
+          is_master: false,
+          crm: 'CRN-3 65981/SP',
+          created_at: '2026-02-05T14:30:00Z',
+        },
+        {
+          id: 'nutri-camila-004',
+          nome: 'Dra. Camila Alves',
+          email: 'camila.alves@vagnernutri.com.br',
+          role: 'nutricionista',
+          is_master: false,
+          crm: 'CRN-3 82190/SP',
+          created_at: '2026-03-12T09:15:00Z',
+        },
+      ];
+      localStorage.setItem(STORAGE_KEYS.NUTRICIONISTAS, JSON.stringify(defaultNutris));
+      return defaultNutris;
+    }
+    return JSON.parse(stored);
+  },
+
+  registerNutricionista(nutri: Nutricionista): void {
+    const nutris = this.getNutricionistas();
+    if (!nutris.some(n => n.id === nutri.id || n.email === nutri.email)) {
+      nutris.push(nutri);
+      localStorage.setItem(STORAGE_KEYS.NUTRICIONISTAS, JSON.stringify(nutris));
+    }
+  },
+
+  // Pacientes (com suporte à visão global / master)
   getPacientes(): Paciente[] {
     const stored = localStorage.getItem(STORAGE_KEYS.PACIENTES);
     if (!stored) {
-      // Inicializar com dados demonstrativos caso esteja vazio
+      // Dados demonstrativos globais enriquecidos com nutricionistas responsáveis
       const demo: Paciente[] = [
         {
           id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
-          nome: 'Mariana Silva',
+          nutricionista_id: 'master-vagner-001',
+          nutricionista_nome: 'Dr. Vagner Andrade (Master)',
+          nome: 'Mariana Silva Costa',
           data_nascimento: '1995-04-12',
           sexo: 'Feminino',
           whatsapp: '(11) 98765-4321',
@@ -130,10 +226,12 @@ export const DbService = {
           atividade_fisica: true,
           atividade_fisica_descricao: 'Musculação 4x na semana',
           observacoes: 'Preferência por refeições práticas de manhã.',
-          created_at: new Date().toISOString(),
+          created_at: '2026-08-01T10:00:00Z',
         },
         {
           id: '2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e',
+          nutricionista_id: 'master-vagner-001',
+          nutricionista_nome: 'Dr. Vagner Andrade (Master)',
           nome: 'Carlos Eduardo Santos',
           data_nascimento: '1988-11-25',
           sexo: 'Masculino',
@@ -153,7 +251,82 @@ export const DbService = {
           litros_agua: 3.5,
           atividade_fisica: true,
           atividade_fisica_descricao: 'CrossFit 5x na semana',
-          created_at: new Date().toISOString(),
+          created_at: '2026-08-03T14:20:00Z',
+        },
+        {
+          id: '3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f',
+          nutricionista_id: 'nutri-mariana-002',
+          nutricionista_nome: 'Dra. Mariana Souza',
+          nome: 'Fernanda de Oliveira Ribeiro',
+          data_nascimento: '1992-07-19',
+          sexo: 'Feminino',
+          whatsapp: '(11) 99123-4567',
+          email: 'fernanda.ribeiro@email.com',
+          peso_inicial: 72.3,
+          altura: 1.70,
+          objetivos: ['Reeducação Alimentar', 'Controle Glicêmico'],
+          objetivo_texto: 'Melhorar relação com a comida e regular níveis de insulina.',
+          nivel_atividade: 'Levemente Ativo',
+          patologias: ['Resistência à Insulina'],
+          restricoes_alimentares: ['Glúten'],
+          alergias: ['Amendoim'],
+          refeicoes_por_dia: 4,
+          horario_acorda: '07:00',
+          horario_dorme: '23:00',
+          litros_agua: 2.0,
+          atividade_fisica: true,
+          atividade_fisica_descricao: 'Pilates 2x na semana e caminhada',
+          created_at: '2026-08-05T09:40:00Z',
+        },
+        {
+          id: '4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a',
+          nutricionista_id: 'nutri-roberto-003',
+          nutricionista_nome: 'Dr. Roberto Lima',
+          nome: 'Lucas Gabriel Mendes',
+          data_nascimento: '2001-03-30',
+          sexo: 'Masculino',
+          whatsapp: '(11) 98234-5678',
+          email: 'lucas.mendes@email.com',
+          peso_inicial: 63.0,
+          altura: 1.82,
+          objetivos: ['Ganho de Peso', 'Hipertrofia'],
+          objetivo_texto: 'Atingir 75kg com percentual de gordura controlado.',
+          nivel_atividade: 'Muito Ativo',
+          patologias: [],
+          restricoes_alimentares: [],
+          alergias: [],
+          refeicoes_por_dia: 6,
+          horario_acorda: '05:30',
+          horario_dorme: '22:00',
+          litros_agua: 4.0,
+          atividade_fisica: true,
+          atividade_fisica_descricao: 'Natação e Musculação',
+          created_at: '2026-08-08T16:10:00Z',
+        },
+        {
+          id: '5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b',
+          nutricionista_id: 'nutri-camila-004',
+          nutricionista_nome: 'Dra. Camila Alves',
+          nome: 'Juliana Beatriz Carvalho',
+          data_nascimento: '1985-09-14',
+          sexo: 'Feminino',
+          whatsapp: '(11) 97345-6789',
+          email: 'juliana.carvalho@email.com',
+          peso_inicial: 81.5,
+          altura: 1.62,
+          objetivos: ['Saúde Cardiovascular', 'Emagrecimento'],
+          objetivo_texto: 'Reduzir colesterol LDL e controlar pressão arterial.',
+          nivel_atividade: 'Sedentário',
+          patologias: ['Hipertensão Arterial'],
+          restricoes_alimentares: ['Excesso de Sódio'],
+          alergias: [],
+          refeicoes_por_dia: 4,
+          horario_acorda: '08:00',
+          horario_dorme: '00:00',
+          litros_agua: 1.8,
+          atividade_fisica: false,
+          atividade_fisica_descricao: '',
+          created_at: '2026-08-10T11:00:00Z',
         },
       ];
       localStorage.setItem(STORAGE_KEYS.PACIENTES, JSON.stringify(demo));
@@ -164,21 +337,38 @@ export const DbService = {
 
   savePaciente(paciente: Omit<Paciente, 'id' | 'created_at'> & { id?: string }): Paciente {
     const list = this.getPacientes();
+    const currentUser = AuthService.getCurrentUser();
     let saved: Paciente;
+
+    const nutriId = paciente.nutricionista_id || currentUser?.id || MASTER_USER.id;
+    const nutriNome = paciente.nutricionista_nome || currentUser?.nome || MASTER_USER.nome;
 
     if (paciente.id) {
       const idx = list.findIndex((p) => p.id === paciente.id);
       if (idx !== -1) {
-        saved = { ...list[idx], ...paciente };
+        saved = { 
+          ...list[idx], 
+          ...paciente,
+          nutricionista_id: list[idx].nutricionista_id || nutriId,
+          nutricionista_nome: list[idx].nutricionista_nome || nutriNome,
+        };
         list[idx] = saved;
       } else {
-        saved = { ...paciente, id: paciente.id, created_at: new Date().toISOString() } as Paciente;
+        saved = { 
+          ...paciente, 
+          id: paciente.id, 
+          nutricionista_id: nutriId,
+          nutricionista_nome: nutriNome,
+          created_at: new Date().toISOString() 
+        } as Paciente;
         list.push(saved);
       }
     } else {
       saved = {
         ...paciente,
         id: crypto.randomUUID(),
+        nutricionista_id: nutriId,
+        nutricionista_nome: nutriNome,
         created_at: new Date().toISOString(),
       } as Paciente;
       list.unshift(saved);
@@ -198,8 +388,10 @@ export const DbService = {
     const stored = localStorage.getItem(STORAGE_KEYS.CONSULTAS);
     const list: Consulta[] = stored ? JSON.parse(stored) : [
       {
-        id: crypto.randomUUID(),
+        id: 'c-001',
         paciente_id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
+        nutricionista_id: 'master-vagner-001',
+        nutricionista_nome: 'Dr. Vagner Andrade (Master)',
         data_consulta: '2026-08-01',
         peso: 68.5,
         cintura: 74.0,
@@ -207,7 +399,35 @@ export const DbService = {
         percentual_gordura: 24.5,
         observacoes: 'Primeira consulta de avaliação antropométrica.',
         proximo_retorno: '2026-09-01',
-        created_at: new Date().toISOString(),
+        created_at: '2026-08-01T10:30:00Z',
+      },
+      {
+        id: 'c-002',
+        paciente_id: '2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e',
+        nutricionista_id: 'master-vagner-001',
+        nutricionista_nome: 'Dr. Vagner Andrade (Master)',
+        data_consulta: '2026-08-03',
+        peso: 84.0,
+        cintura: 82.0,
+        quadril: 102.0,
+        percentual_gordura: 14.2,
+        observacoes: 'Início do protocolo de hipertrofia.',
+        proximo_retorno: '2026-09-03',
+        created_at: '2026-08-03T15:00:00Z',
+      },
+      {
+        id: 'c-003',
+        paciente_id: '3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f',
+        nutricionista_id: 'nutri-mariana-002',
+        nutricionista_nome: 'Dra. Mariana Souza',
+        data_consulta: '2026-08-05',
+        peso: 72.3,
+        cintura: 78.0,
+        quadril: 101.0,
+        percentual_gordura: 28.0,
+        observacoes: 'Ajuste de carboidratos complexos de baixo IG.',
+        proximo_retorno: '2026-09-05',
+        created_at: '2026-08-05T10:15:00Z',
       }
     ];
 
@@ -219,9 +439,12 @@ export const DbService = {
 
   saveConsulta(consulta: Omit<Consulta, 'id' | 'created_at'>): Consulta {
     const list = this.getConsultas();
+    const currentUser = AuthService.getCurrentUser();
     const newConsulta: Consulta = {
       ...consulta,
       id: crypto.randomUUID(),
+      nutricionista_id: consulta.nutricionista_id || currentUser?.id || MASTER_USER.id,
+      nutricionista_nome: consulta.nutricionista_nome || currentUser?.nome || MASTER_USER.nome,
       created_at: new Date().toISOString(),
     };
     list.unshift(newConsulta);
@@ -234,8 +457,10 @@ export const DbService = {
     const stored = localStorage.getItem(STORAGE_KEYS.PLANOS);
     const list: PlanoAlimentar[] = stored ? JSON.parse(stored) : [
       {
-        id: crypto.randomUUID(),
+        id: 'plano-001',
         paciente_id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
+        nutricionista_id: 'master-vagner-001',
+        nutricionista_nome: 'Dr. Vagner Andrade (Master)',
         conteudo: {
           titulo_plano: 'Plano Alimentar - Emagrecimento Sem Fome',
           meta_calorica: 1800,
@@ -291,7 +516,7 @@ export const DbService = {
             },
           ],
         },
-        created_at: new Date().toISOString(),
+        created_at: '2026-08-01T11:00:00Z',
       },
     ];
 
@@ -303,9 +528,12 @@ export const DbService = {
 
   savePlano(plano: Omit<PlanoAlimentar, 'id' | 'created_at'>): PlanoAlimentar {
     const list = this.getPlanos();
+    const currentUser = AuthService.getCurrentUser();
     const newPlano: PlanoAlimentar = {
       ...plano,
       id: crypto.randomUUID(),
+      nutricionista_id: plano.nutricionista_id || currentUser?.id || MASTER_USER.id,
+      nutricionista_nome: plano.nutricionista_nome || currentUser?.nome || MASTER_USER.nome,
       created_at: new Date().toISOString(),
     };
     list.unshift(newPlano);
