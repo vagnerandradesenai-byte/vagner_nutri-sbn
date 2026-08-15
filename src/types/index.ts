@@ -5,6 +5,10 @@ export interface Nutricionista {
   role?: 'master' | 'admin' | 'nutricionista';
   is_master?: boolean;
   crm?: string;
+  especialidade?: string;
+  avatar?: string;
+  telefone?: string;
+  cor?: string;
   created_at?: string;
 }
 

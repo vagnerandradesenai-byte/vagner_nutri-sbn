@@ -5,12 +5,13 @@ import { DashboardView } from './components/DashboardView';
 import { PacientesView } from './components/PacientesView';
 import { ConsultasView } from './components/ConsultasView';
 import { PlanosView } from './components/PlanosView';
+import { EquipeView } from './components/EquipeView';
 import { AuthService, DbService } from './lib/neon';
 import { Nutricionista, Paciente, Consulta, PlanoAlimentar } from './types';
 
 export const App: React.FC = () => {
   const [user, setUser] = useState<Nutricionista | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'pacientes' | 'consultas' | 'planos'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'pacientes' | 'consultas' | 'planos' | 'equipe'>('dashboard');
   
   // App Data
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -36,6 +37,12 @@ export const App: React.FC = () => {
   };
 
   const handleLoginSuccess = (nutricionista: Nutricionista) => {
+    setUser(nutricionista);
+    refreshData();
+  };
+
+  const handleSwitchNutri = (nutricionista: Nutricionista) => {
+    AuthService.selectNutricionista(nutricionista.id);
     setUser(nutricionista);
     refreshData();
   };
@@ -74,6 +81,7 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onLogout={handleLogout}
+        onSwitchNutri={handleSwitchNutri}
       />
 
       <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '24px 16px' }}>
@@ -87,7 +95,7 @@ export const App: React.FC = () => {
                 pacientes={pacientes}
                 consultas={consultas}
                 planos={planos}
-                onNavigate={setActiveTab}
+                onNavigate={(tab) => setActiveTab(tab)}
                 onOpenNovoPaciente={() => {
                   setActiveTab('pacientes');
                   setShowNovoPacienteModal(true);
@@ -119,6 +127,19 @@ export const App: React.FC = () => {
                 planos={planos}
                 pacientes={pacientes}
                 onSavePlano={handleSavePlano}
+              />
+            )}
+
+            {activeTab === 'equipe' && (
+              <EquipeView
+                currentUser={user}
+                pacientes={pacientes}
+                onSelectNutri={(nutri) => {
+                  handleSwitchNutri(nutri);
+                }}
+                onNavigateToPacientes={() => {
+                  setActiveTab('pacientes');
+                }}
               />
             )}
           </>

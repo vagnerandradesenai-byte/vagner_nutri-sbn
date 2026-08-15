@@ -1,27 +1,31 @@
 import React, { useState } from 'react';
-import { AuthService } from '../lib/neon';
+import { AuthService, DbService } from '../lib/neon';
 import { Nutricionista } from '../types';
-import { Lock, Mail, User, ShieldCheck, ArrowRight, HeartPulse, Crown, Sparkles, CheckCircle } from 'lucide-react';
+import { Lock, Mail, User, ShieldCheck, ArrowRight, HeartPulse, Crown, Sparkles, CheckCircle, Stethoscope, ChevronRight, UserCheck } from 'lucide-react';
 
 interface AuthModalProps {
   onLoginSuccess: (user: Nutricionista) => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
-  const [isRegister, setIsRegister] = useState(false);
+  const [activeMode, setActiveMode] = useState<'picker' | 'login' | 'register'>('picker');
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [crm, setCrm] = useState('');
+  const [especialidade, setEspecialidade] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleMasterDirectLogin = () => {
+  const nutrisList = DbService.getNutricionistas();
+
+  const handleSelectNutri = (nutri: Nutricionista) => {
     setLoading(true);
     setTimeout(() => {
-      const masterUser = AuthService.loginMaster();
-      onLoginSuccess(masterUser);
+      AuthService.selectNutricionista(nutri.id);
+      onLoginSuccess(nutri);
       setLoading(false);
-    }, 400);
+    }, 300);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,9 +34,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      if (isRegister) {
+      if (activeMode === 'register') {
         if (!nome) throw new Error('Por favor, informe seu nome completo.');
-        const user = await AuthService.register(nome, email, password);
+        const user = await AuthService.register(nome, email, password, crm, especialidade);
         onLoginSuccess(user);
       } else {
         const user = await AuthService.login(email, password);
@@ -47,76 +51,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '480px', padding: '36px 32px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+      <div className="glass-panel" style={{ width: '100%', maxWidth: '580px', padding: '36px 32px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
         
         {/* Header with Tricolor Icon */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '22px' }}>
           <div style={{ display: 'inline-flex', background: 'linear-gradient(135deg, #2563eb 0%, #10b981 100%)', padding: '14px', borderRadius: '16px', color: '#fff', marginBottom: '14px', boxShadow: '0 8px 24px rgba(37,99,235,0.4)' }}>
             <HeartPulse size={32} />
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '6px', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: '1.7rem', fontWeight: 800, marginBottom: '6px', letterSpacing: '-0.02em' }}>
             <span style={{ color: '#60a5fa' }}>Vagner</span><span style={{ color: '#34d399' }}>Nutri</span>
           </h2>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            {isRegister ? 'Cadastre-se para gerenciar seus pacientes' : 'Plataforma integrada ao Neon PostgreSQL (aws-sa-east-1)'}
+            Selecione seu perfil de nutricionista ou entre com suas credenciais Neon
           </p>
         </div>
 
-        {/* Master Quick Access Highlight */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(239, 68, 68, 0.15) 100%)',
-          border: '1px solid rgba(245, 158, 11, 0.4)',
-          borderRadius: '14px',
-          padding: '16px',
-          marginBottom: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ background: '#f59e0b', color: '#0f172a', padding: '4px', borderRadius: '8px', display: 'flex' }}>
-                <Crown size={18} />
-              </div>
-              <div>
-                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fbbf24' }}>Acesso Master Geral</span>
-                <p style={{ fontSize: '0.75rem', color: '#e2e8f0', margin: 0 }}>Visão completa de todos os pacientes e equipe</p>
-              </div>
-            </div>
-            <span className="badge badge-amber" style={{ fontSize: '0.65rem', padding: '2px 8px' }}>
-              <Sparkles size={10} /> 1-Clique
-            </span>
-          </div>
-
+        {/* Mode Selector Tabs */}
+        <div style={{ display: 'flex', gap: '6px', background: 'rgba(15, 23, 42, 0.7)', padding: '4px', borderRadius: '12px', marginBottom: '22px', border: '1px solid var(--border-color)' }}>
           <button
             type="button"
-            onClick={handleMasterDirectLogin}
-            disabled={loading}
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-              color: '#ffffff',
-              fontWeight: 700,
-              fontSize: '0.875rem',
-              padding: '10px 16px',
-              borderRadius: '10px',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 4px 14px rgba(239, 68, 68, 0.35)'
-            }}
+            onClick={() => setActiveMode('picker')}
+            className={activeMode === 'picker' ? 'btn-primary' : 'btn-secondary'}
+            style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
           >
-            <Crown size={16} /> Entrar como Master (Dr. Vagner)
+            <Stethoscope size={16} /> Escolher Nutricionista
           </button>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }}></div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ou acesse com login individual</span>
-          <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }}></div>
+          <button
+            type="button"
+            onClick={() => setActiveMode('login')}
+            className={activeMode === 'login' ? 'btn-blue' : 'btn-secondary'}
+            style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
+          >
+            <Lock size={16} /> Login por E-mail
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMode('register')}
+            className={activeMode === 'register' ? 'btn-green' : 'btn-secondary'}
+            style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
+          >
+            <User size={16} /> Novo Cadastro
+          </button>
         </div>
 
         {error && (
@@ -125,83 +100,173 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {isRegister && (
+        {/* 1. PICKER MODE: Direct List of Nutritionists */}
+        {activeMode === 'picker' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Clique para entrar no perfil desejado:
+              </span>
+              <span className="badge badge-green" style={{ fontSize: '0.65rem' }}>
+                {nutrisList.length} Ativos
+              </span>
+            </div>
+
+            {nutrisList.map((nutri) => (
+              <div
+                key={nutri.id}
+                onClick={() => !loading && handleSelectNutri(nutri)}
+                className="glass-panel glass-panel-hover"
+                style={{
+                  padding: '14px 18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  borderLeft: nutri.is_master ? '4px solid #f59e0b' : '4px solid #3b82f6',
+                  transition: 'all 0.2s ease',
+                  opacity: loading ? 0.6 : 1
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    background: nutri.is_master ? 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff'
+                  }}>
+                    {nutri.is_master ? <Crown size={20} /> : <Stethoscope size={20} />}
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: nutri.is_master ? '#fef08a' : '#fff' }}>
+                        {nutri.nome}
+                      </span>
+                      {nutri.is_master && (
+                        <span className="badge badge-amber" style={{ fontSize: '0.6rem', padding: '1px 6px' }}>Master</span>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                      {nutri.especialidade || 'Nutrição Clínica'} • <strong style={{ color: '#60a5fa' }}>{nutri.crm || 'CRN'}</strong>
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#60a5fa', fontSize: '0.8rem', fontWeight: 600 }}>
+                  <span>Acessar</span>
+                  <ChevronRight size={16} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 2. LOGIN / REGISTER FORM */}
+        {(activeMode === 'login' || activeMode === 'register') && (
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {activeMode === 'register' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Nome Completo do Nutricionista *</label>
+                  <div style={{ position: 'relative' }}>
+                    <User size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#60a5fa' }} />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Dr. Carlos Eduardo"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      className="form-input"
+                      style={{ paddingLeft: '40px', width: '100%' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Registro Profissional (CRN)</label>
+                    <input
+                      type="text"
+                      placeholder="CRN-3 12345/SP"
+                      value={crm}
+                      onChange={(e) => setCrm(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Especialidade</label>
+                    <input
+                      type="text"
+                      placeholder="Nutrição Esportiva"
+                      value={especialidade}
+                      onChange={(e) => setEspecialidade(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="form-group">
-              <label className="form-label">Nome Completo</label>
+              <label className="form-label">E-mail Profissional</label>
               <div style={{ position: 'relative' }}>
-                <User size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#60a5fa' }} />
+                <Mail size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#60a5fa' }} />
                 <input
-                  type="text"
+                  type="email"
                   required
-                  placeholder="Dr. Vagner Andrade"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
+                  placeholder="nutri@vagnernutri.com.br"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="form-input"
                   style={{ paddingLeft: '40px', width: '100%' }}
                 />
               </div>
             </div>
-          )}
 
-          <div className="form-group">
-            <label className="form-label">E-mail Profissional</label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#60a5fa' }} />
-              <input
-                type="email"
-                required
-                placeholder="nutri@vagnernutri.com.br"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="form-input"
-                style={{ paddingLeft: '40px', width: '100%' }}
-              />
+            <div className="form-group">
+              <label className="form-label">Senha de Acesso</label>
+              <div style={{ position: 'relative' }}>
+                <Lock size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#60a5fa' }} />
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="form-input"
+                  style={{ paddingLeft: '40px', width: '100%' }}
+                />
+              </div>
             </div>
+
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className={activeMode === 'register' ? 'btn-green' : 'btn-blue'} 
+              style={{ width: '100%', padding: '12px', marginTop: '6px' }}
+            >
+              {loading ? (
+                'Autenticando no Neon...'
+              ) : (
+                <>
+                  {activeMode === 'register' ? 'Concluir Cadastro de Nutricionista' : 'Entrar no Sistema'}
+                  <ArrowRight size={18} />
+                </>
+              )}
+            </button>
+          </form>
+        )}
+
+        <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#64748b' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ShieldCheck size={14} color="#10b981" /> Neon Auth + PostgreSQL 18 SSL
           </div>
-
-          <div className="form-group">
-            <label className="form-label">Senha</label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#60a5fa' }} />
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="form-input"
-                style={{ paddingLeft: '40px', width: '100%' }}
-              />
-            </div>
-          </div>
-
-          <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', padding: '12px', marginTop: '6px' }}>
-            {loading ? (
-              'Autenticando no Neon...'
-            ) : (
-              <>
-                {isRegister ? 'Finalizar Cadastro' : 'Entrar no Sistema'}
-                <ArrowRight size={18} />
-              </>
-            )}
-          </button>
-        </form>
-
-        <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
-          <button
-            onClick={() => {
-              setIsRegister(!isRegister);
-              setError('');
-            }}
-            style={{ background: 'none', color: '#60a5fa', fontSize: '0.875rem', fontWeight: 500 }}
-          >
-            {isRegister ? 'Já possui uma conta? Faça login' : 'Não tem conta? Cadastre-se aqui'}
-          </button>
-
-          <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.75rem', color: '#64748b' }}>
-            <ShieldCheck size={14} color="#10b981" /> Conexão encriptada Neon Auth + Postgres SSL
-          </div>
+          <span style={{ color: '#94a3b8' }}>Multi-Profissional</span>
         </div>
       </div>
     </div>

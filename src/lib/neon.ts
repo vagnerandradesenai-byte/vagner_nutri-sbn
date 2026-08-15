@@ -21,8 +21,63 @@ export const MASTER_USER: Nutricionista = {
   role: 'master',
   is_master: true,
   crm: 'CRN-3 89452/SP',
+  especialidade: 'Nutrição Clínica Avançada & Esportiva',
+  telefone: '(11) 99876-5432',
+  cor: '#f59e0b',
   created_at: new Date().toISOString(),
 };
+
+export const INITIAL_NUTRICIONISTAS: Nutricionista[] = [
+  MASTER_USER,
+  {
+    id: 'nutri-mariana-002',
+    nome: 'Dra. Mariana Souza',
+    email: 'mariana.souza@vagnernutri.com.br',
+    role: 'nutricionista',
+    is_master: false,
+    crm: 'CRN-3 71204/SP',
+    especialidade: 'Emagrecimento Saudável & Saúde da Mulher',
+    telefone: '(11) 98712-3456',
+    cor: '#ec4899',
+    created_at: '2026-01-10T10:00:00Z',
+  },
+  {
+    id: 'nutri-roberto-003',
+    nome: 'Dr. Roberto Lima',
+    email: 'roberto.lima@vagnernutri.com.br',
+    role: 'nutricionista',
+    is_master: false,
+    crm: 'CRN-3 65981/SP',
+    especialidade: 'Nutrição Esportiva & Performance',
+    telefone: '(11) 97654-9876',
+    cor: '#3b82f6',
+    created_at: '2026-02-05T14:30:00Z',
+  },
+  {
+    id: 'nutri-camila-004',
+    nome: 'Dra. Camila Alves',
+    email: 'camila.alves@vagnernutri.com.br',
+    role: 'nutricionista',
+    is_master: false,
+    crm: 'CRN-3 82190/SP',
+    especialidade: 'Nutrição Comportamental & Doenças Crônicas',
+    telefone: '(11) 99123-8899',
+    cor: '#10b981',
+    created_at: '2026-03-12T09:15:00Z',
+  },
+  {
+    id: 'nutri-felipe-005',
+    nome: 'Dr. Felipe Albuquerque',
+    email: 'felipe.albuquerque@vagnernutri.com.br',
+    role: 'nutricionista',
+    is_master: false,
+    crm: 'CRN-3 91340/SP',
+    especialidade: 'Nutrição Vegetariana, Vegana & Longevidade',
+    telefone: '(11) 98456-1122',
+    cor: '#8b5cf6',
+    created_at: '2026-04-18T11:00:00Z',
+  },
+];
 
 // --- SERVIÇO DE AUTENTICAÇÃO NEON AUTH ---
 export const AuthService = {
@@ -32,7 +87,15 @@ export const AuthService = {
     return MASTER_USER;
   },
 
-  async register(nome: string, email: string, password: string): Promise<Nutricionista> {
+  // Selecionar / Trocar Nutricionista Ativo
+  selectNutricionista(nutriId: string): Nutricionista {
+    const nutris = DbService.getNutricionistas();
+    const target = nutris.find(n => n.id === nutriId) || MASTER_USER;
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(target));
+    return target;
+  },
+
+  async register(nome: string, email: string, password: string, crm?: string, especialidade?: string): Promise<Nutricionista> {
     const isMasterEmail = email.toLowerCase().includes('master') || email.toLowerCase().includes('admin');
     
     try {
@@ -49,6 +112,9 @@ export const AuthService = {
           id: data.user?.id || crypto.randomUUID(),
           nome: data.user?.name || nome,
           email: data.user?.email || email,
+          crm: crm || 'CRN-3 Pendente',
+          especialidade: especialidade || 'Nutrição Clínica Geral',
+          cor: '#3b82f6',
           role: isMasterEmail ? 'master' : 'nutricionista',
           is_master: isMasterEmail,
           created_at: new Date().toISOString(),
@@ -66,6 +132,9 @@ export const AuthService = {
       id: crypto.randomUUID(),
       nome,
       email,
+      crm: crm || 'CRN-3 Ativo',
+      especialidade: especialidade || 'Nutrição Clínica Geral',
+      cor: '#3b82f6',
       role: isMasterEmail ? 'master' : 'nutricionista',
       is_master: isMasterEmail,
       created_at: new Date().toISOString(),
@@ -83,6 +152,14 @@ export const AuthService = {
 
     if (isMaster) {
       return this.loginMaster();
+    }
+
+    // Verificar se corresponde a algum nutricionista cadastrado
+    const nutris = DbService.getNutricionistas();
+    const existing = nutris.find(n => n.email.toLowerCase() === email.toLowerCase());
+    if (existing) {
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(existing));
+      return existing;
     }
 
     try {
@@ -108,13 +185,6 @@ export const AuthService = {
       }
     } catch (err) {
       console.warn('Neon Auth login fallback:', err);
-    }
-
-    // Caso o e-mail exista localmente
-    const stored = localStorage.getItem(STORAGE_KEYS.USER);
-    if (stored) {
-      const user = JSON.parse(stored);
-      if (user.email === email) return user;
     }
 
     // Mock seguro para testes
@@ -152,55 +222,35 @@ export const DbService = {
   getNutricionistas(): Nutricionista[] {
     const stored = localStorage.getItem(STORAGE_KEYS.NUTRICIONISTAS);
     if (!stored) {
-      const defaultNutris: Nutricionista[] = [
-        MASTER_USER,
-        {
-          id: 'nutri-mariana-002',
-          nome: 'Dra. Mariana Souza',
-          email: 'mariana.souza@vagnernutri.com.br',
-          role: 'nutricionista',
-          is_master: false,
-          crm: 'CRN-3 71204/SP',
-          created_at: '2026-01-10T10:00:00Z',
-        },
-        {
-          id: 'nutri-roberto-003',
-          nome: 'Dr. Roberto Lima',
-          email: 'roberto.lima@vagnernutri.com.br',
-          role: 'nutricionista',
-          is_master: false,
-          crm: 'CRN-3 65981/SP',
-          created_at: '2026-02-05T14:30:00Z',
-        },
-        {
-          id: 'nutri-camila-004',
-          nome: 'Dra. Camila Alves',
-          email: 'camila.alves@vagnernutri.com.br',
-          role: 'nutricionista',
-          is_master: false,
-          crm: 'CRN-3 82190/SP',
-          created_at: '2026-03-12T09:15:00Z',
-        },
-      ];
-      localStorage.setItem(STORAGE_KEYS.NUTRICIONISTAS, JSON.stringify(defaultNutris));
-      return defaultNutris;
+      localStorage.setItem(STORAGE_KEYS.NUTRICIONISTAS, JSON.stringify(INITIAL_NUTRICIONISTAS));
+      return INITIAL_NUTRICIONISTAS;
     }
-    return JSON.parse(stored);
+    const parsed: Nutricionista[] = JSON.parse(stored);
+    // Garantir que todos os nutricionistas padrão existam
+    INITIAL_NUTRICIONISTAS.forEach(initNutri => {
+      if (!parsed.some(p => p.id === initNutri.id)) {
+        parsed.push(initNutri);
+      }
+    });
+    localStorage.setItem(STORAGE_KEYS.NUTRICIONISTAS, JSON.stringify(parsed));
+    return parsed;
   },
 
   registerNutricionista(nutri: Nutricionista): void {
     const nutris = this.getNutricionistas();
-    if (!nutris.some(n => n.id === nutri.id || n.email === nutri.email)) {
+    const idx = nutris.findIndex(n => n.id === nutri.id || n.email === nutri.email);
+    if (idx >= 0) {
+      nutris[idx] = { ...nutris[idx], ...nutri };
+    } else {
       nutris.push(nutri);
-      localStorage.setItem(STORAGE_KEYS.NUTRICIONISTAS, JSON.stringify(nutris));
     }
+    localStorage.setItem(STORAGE_KEYS.NUTRICIONISTAS, JSON.stringify(nutris));
   },
 
-  // Pacientes (com suporte à visão global / master)
+  // Pacientes
   getPacientes(): Paciente[] {
     const stored = localStorage.getItem(STORAGE_KEYS.PACIENTES);
     if (!stored) {
-      // Dados demonstrativos globais enriquecidos com nutricionistas responsáveis
       const demo: Paciente[] = [
         {
           id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
@@ -328,6 +378,31 @@ export const DbService = {
           atividade_fisica_descricao: '',
           created_at: '2026-08-10T11:00:00Z',
         },
+        {
+          id: '6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c',
+          nutricionista_id: 'nutri-felipe-005',
+          nutricionista_nome: 'Dr. Felipe Albuquerque',
+          nome: 'Rodrigo Medeiros',
+          data_nascimento: '1998-12-04',
+          sexo: 'Masculino',
+          whatsapp: '(11) 98112-9900',
+          email: 'rodrigo.medeiros@email.com',
+          peso_inicial: 75.0,
+          altura: 1.76,
+          objetivos: ['Transição Vegana', 'Saúde Digestiva'],
+          objetivo_texto: 'Transição segura para dieta plant-based sem perda de massa magra.',
+          nivel_atividade: 'Moderadamente Ativo',
+          patologias: [],
+          restricoes_alimentares: ['Carne Vermelha', 'Aves', 'Peixes', 'Lactose'],
+          alergias: [],
+          refeicoes_por_dia: 5,
+          horario_acorda: '06:30',
+          horario_dorme: '23:00',
+          litros_agua: 3.0,
+          atividade_fisica: true,
+          atividade_fisica_descricao: 'Ciclismo e Yoga',
+          created_at: '2026-08-12T15:30:00Z',
+        },
       ];
       localStorage.setItem(STORAGE_KEYS.PACIENTES, JSON.stringify(demo));
       return demo;
@@ -349,8 +424,8 @@ export const DbService = {
         saved = { 
           ...list[idx], 
           ...paciente,
-          nutricionista_id: list[idx].nutricionista_id || nutriId,
-          nutricionista_nome: list[idx].nutricionista_nome || nutriNome,
+          nutricionista_id: paciente.nutricionista_id || list[idx].nutricionista_id || nutriId,
+          nutricionista_nome: paciente.nutricionista_nome || list[idx].nutricionista_nome || nutriNome,
         };
         list[idx] = saved;
       } else {
