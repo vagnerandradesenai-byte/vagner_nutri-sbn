@@ -71,6 +71,17 @@ export interface Refeicao {
   itens: RefeicaoItem[];
 }
 
+export interface ProtocoloExercicio {
+  id?: string;
+  nome: string;
+  categoria: 'Musculação' | 'Cardio' | 'Funcional' | 'Alongamento / Yoga' | 'Esporte / Luta' | 'Outro';
+  frequencia_semanal: string;
+  duracao_minutos: number;
+  intensidade: 'Leve' | 'Moderada' | 'Alta' | 'Intensa';
+  gasto_calorico_estimado?: number;
+  orientacoes?: string;
+}
+
 export interface ConteudoPlanoAlimentar {
   titulo_plano: string;
   meta_calorica: number;
@@ -79,6 +90,7 @@ export interface ConteudoPlanoAlimentar {
   macro_gorduras: string;
   observacoes_gerais: string;
   refeicoes: Refeicao[];
+  exercicios?: ProtocoloExercicio[];
 }
 
 export interface PlanoAlimentar {

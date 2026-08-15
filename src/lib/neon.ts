@@ -1,4 +1,4 @@
-import { Nutricionista, Paciente, Consulta, PlanoAlimentar } from '../types';
+import { Nutricionista, Paciente, Consulta, PlanoAlimentar, ProtocoloExercicio } from '../types';
 
 // Configurações de ambiente (seguras, lidas via import.meta.env)
 export const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL || 'https://ep-delicate-cloud-acrkqzy5.neonauth.sa-east-1.aws.neon.tech/neondb/auth';
@@ -76,6 +76,73 @@ export const INITIAL_NUTRICIONISTAS: Nutricionista[] = [
     telefone: '(11) 98456-1122',
     cor: '#8b5cf6',
     created_at: '2026-04-18T11:00:00Z',
+  },
+];
+
+// Presets de Exercícios Físicos
+export const EXERCICIOS_PRESETS: ProtocoloExercicio[] = [
+  {
+    nome: 'Musculação / Hipertrofia (Treino Resistido A/B/C)',
+    categoria: 'Musculação',
+    frequencia_semanal: '4x por semana',
+    duracao_minutos: 50,
+    intensidade: 'Moderada',
+    gasto_calorico_estimado: 350,
+    orientacoes: 'Foco em execução controlada e progressão de carga. Tomar 500ml de água durante a sessão.'
+  },
+  {
+    nome: 'Cardio LISS (Caminhada Inclinada / Esteira Zona 2)',
+    categoria: 'Cardio',
+    frequencia_semanal: '3x por semana',
+    duracao_minutos: 35,
+    intensidade: 'Moderada',
+    gasto_calorico_estimado: 220,
+    orientacoes: 'Manter frequência cardíaca controlada (65-75% FCM) para otimização da oxidação lipídica.'
+  },
+  {
+    nome: 'Treino Funcional HIIT / Metabólico',
+    categoria: 'Funcional',
+    frequencia_semanal: '2x por semana',
+    duracao_minutos: 25,
+    intensidade: 'Alta',
+    gasto_calorico_estimado: 280,
+    orientacoes: 'Estímulos intervalados (30s ativo / 30s descanso) para aumento da taxa metabólica basal.'
+  },
+  {
+    nome: 'CrossFit / Condicionamento de Alta Intensidade',
+    categoria: 'Funcional',
+    frequencia_semanal: '4x por semana',
+    duracao_minutos: 60,
+    intensidade: 'Intensa',
+    gasto_calorico_estimado: 500,
+    orientacoes: 'Consumir refeição com carboidratos complexos 1h30 antes do treino (WOD).'
+  },
+  {
+    nome: 'Natação / Hidroginástica',
+    categoria: 'Esporte / Luta',
+    frequencia_semanal: '2x por semana',
+    duracao_minutos: 45,
+    intensidade: 'Moderada',
+    gasto_calorico_estimado: 380,
+    orientacoes: 'Excelente estímulo aeróbico completo com zero impacto nas articulações.'
+  },
+  {
+    nome: 'Ciclismo / Spinning Indoor',
+    categoria: 'Cardio',
+    frequencia_semanal: '3x por semana',
+    duracao_minutos: 45,
+    intensidade: 'Alta',
+    gasto_calorico_estimado: 400,
+    orientacoes: 'Hidratação constante com eletrólitos se a sessão ultrapassar 45 minutos.'
+  },
+  {
+    nome: 'Yoga / Mobilidade Articular & Alongamento',
+    categoria: 'Alongamento / Yoga',
+    frequencia_semanal: '2x por semana',
+    duracao_minutos: 30,
+    intensidade: 'Leve',
+    gasto_calorico_estimado: 120,
+    orientacoes: 'Recuperação ativa muscular, controle do cortisol e melhora da flexibilidade.'
   },
 ];
 
@@ -527,74 +594,100 @@ export const DbService = {
     return newConsulta;
   },
 
-  // Planos Alimentares
+  // Planos Alimentares com Exercícios Físicos Integrados
   getPlanos(pacienteId?: string): PlanoAlimentar[] {
     const stored = localStorage.getItem(STORAGE_KEYS.PLANOS);
-    const list: PlanoAlimentar[] = stored ? JSON.parse(stored) : [
-      {
-        id: 'plano-001',
-        paciente_id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
-        nutricionista_id: 'master-vagner-001',
-        nutricionista_nome: 'Dr. Vagner Andrade (Master)',
-        conteudo: {
-          titulo_plano: 'Plano Alimentar - Emagrecimento Sem Fome',
-          meta_calorica: 1800,
-          macro_proteinas: '120g (27%)',
-          macro_carboidratos: '180g (40%)',
-          macro_gorduras: '66g (33%)',
-          observacoes_gerais: 'Beber 500ml de água ao acordar. Evitar refrigerantes e açúcar refinado.',
-          refeicoes: [
-            {
-              horario: '07:00',
-              titulo: 'Café da Manhã',
-              itens: [
-                { alimento: 'Ovos mexidos com azeite de oliva', quantidade: '2 unidades' },
-                { alimento: 'Pão integral 100%', quantidade: '2 fatias' },
-                { alimento: 'Café preto sem açúcar', quantidade: '150ml' },
-              ],
-            },
-            {
-              horario: '10:00',
-              titulo: 'Lanche da Manhã',
-              itens: [
-                { alimento: 'Maçã verde ou Pêra', quantidade: '1 unidade' },
-                { alimento: 'Castanha do Pará', quantidade: '3 unidades' },
-              ],
-            },
-            {
-              horario: '12:30',
-              titulo: 'Almoço',
-              itens: [
-                { alimento: 'Peito de frango grelhado ou filé de tilápia', quantidade: '130g' },
-                { alimento: 'Arroz integral cozido', quantidade: '100g' },
-                { alimento: 'Feijão preto temperado', quantidade: '80g' },
-                { alimento: 'Salada de folhas verdes à vontade', quantidade: '1 prato cheio' },
-              ],
-            },
-            {
-              horario: '16:00',
-              titulo: 'Lanche da Tarde',
-              itens: [
-                { alimento: 'Iogurte natural desnatado', quantidade: '170g' },
-                { alimento: 'Whey Protein concentrado', quantidade: '1 scoop (30g)' },
-                { alimento: 'Morangos frescos', quantidade: '6 unidades' },
-              ],
-            },
-            {
-              horario: '19:30',
-              titulo: 'Jantar',
-              itens: [
-                { alimento: 'Omelete com legumes (espinafre, tomate, cebola)', quantidade: '3 ovos' },
-                { alimento: 'Batata doce assada', quantidade: '100g' },
-                { alimento: 'Azeite extra virgem', quantidade: '1 colher de sobremesa' },
-              ],
-            },
-          ],
+    if (!stored) {
+      const demoPlanos: PlanoAlimentar[] = [
+        {
+          id: 'plano-001',
+          paciente_id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
+          nutricionista_id: 'master-vagner-001',
+          nutricionista_nome: 'Dr. Vagner Andrade (Master)',
+          conteudo: {
+            titulo_plano: 'Plano Alimentar - Emagrecimento & Definição',
+            meta_calorica: 1800,
+            macro_proteinas: '120g (27%)',
+            macro_carboidratos: '180g (40%)',
+            macro_gorduras: '66g (33%)',
+            observacoes_gerais: 'Beber 500ml de água ao acordar. Evitar refrigerantes e açúcar refinado.',
+            refeicoes: [
+              {
+                horario: '07:00',
+                titulo: 'Café da Manhã',
+                itens: [
+                  { alimento: 'Ovos mexidos com azeite de oliva', quantidade: '2 unidades' },
+                  { alimento: 'Pão integral 100%', quantidade: '2 fatias' },
+                  { alimento: 'Café preto sem açúcar', quantidade: '150ml' },
+                ],
+              },
+              {
+                horario: '10:00',
+                titulo: 'Lanche da Manhã',
+                itens: [
+                  { alimento: 'Maçã verde ou Pêra', quantidade: '1 unidade' },
+                  { alimento: 'Castanha do Pará', quantidade: '3 unidades' },
+                ],
+              },
+              {
+                horario: '12:30',
+                titulo: 'Almoço',
+                itens: [
+                  { alimento: 'Peito de frango grelhado ou tilápia', quantidade: '130g' },
+                  { alimento: 'Arroz integral cozido', quantidade: '100g' },
+                  { alimento: 'Feijão preto temperado', quantidade: '80g' },
+                  { alimento: 'Salada de folhas verdes à vontade', quantidade: '1 prato cheio' },
+                ],
+              },
+              {
+                horario: '16:00',
+                titulo: 'Lanche da Tarde (Pré-Treino)',
+                itens: [
+                  { alimento: 'Iogurte natural desnatado', quantidade: '170g' },
+                  { alimento: 'Whey Protein concentrado', quantidade: '1 scoop (30g)' },
+                  { alimento: 'Morangos frescos', quantidade: '6 unidades' },
+                ],
+              },
+              {
+                horario: '19:30',
+                titulo: 'Jantar',
+                itens: [
+                  { alimento: 'Omelete com espinafre e tomate', quantidade: '3 ovos' },
+                  { alimento: 'Batata doce assada', quantidade: '100g' },
+                  { alimento: 'Azeite extra virgem', quantidade: '1 colher de sobremesa' },
+                ],
+              },
+            ],
+            exercicios: [
+              {
+                id: 'ex-1',
+                nome: 'Musculação / Treino Hipertrofia & Força',
+                categoria: 'Musculação',
+                frequencia_semanal: '4x por semana',
+                duracao_minutos: 50,
+                intensidade: 'Moderada',
+                gasto_calorico_estimado: 350,
+                orientacoes: 'Executar 1h após o Lanche da Tarde. Foco em grandes grupos musculares.',
+              },
+              {
+                id: 'ex-2',
+                nome: 'Cardio Pós-Treino (Caminhada Inclinada Zona 2)',
+                categoria: 'Cardio',
+                frequencia_semanal: '3x por semana',
+                duracao_minutos: 25,
+                intensidade: 'Moderada',
+                gasto_calorico_estimado: 180,
+                orientacoes: 'Manter frequência cardíaca aeróbica para queima lipídica eficiente.',
+              },
+            ],
+          },
+          created_at: '2026-08-01T11:00:00Z',
         },
-        created_at: '2026-08-01T11:00:00Z',
-      },
-    ];
-
+      ];
+      localStorage.setItem(STORAGE_KEYS.PLANOS, JSON.stringify(demoPlanos));
+      return demoPlanos;
+    }
+    const list: PlanoAlimentar[] = JSON.parse(stored);
     if (pacienteId) {
       return list.filter((p) => p.paciente_id === pacienteId);
     }

@@ -53,6 +53,12 @@ A aplicação conta com uma camada de persistência segura integrada ao banco de
 - Divisão detalhada por refeições com horários, alimentos e porções prescritas.
 - Modal de impressão/visualização completa para envio ao paciente.
 
+### 🏋️ 6. Protocolo de Exercícios Físicos Complementares
+- **Sinergia Nutrição + Treino:** Prescrição de atividades físicas integradas à meta calórica da dieta.
+- **Modelos Rápidos (1-Clique):** Musculação/Hipertrofia, Cardio LISS, Treino Funcional HIIT, CrossFit, Natação, Ciclismo/Spinning e Yoga/Alongamento.
+- **Estimativa de Gasto Energético:** Cálculo automático do gasto calórico por sessão e total semanal estimado (`kcal/sem`).
+- **Orientações Específicas:** Recomendações de hidratação, intensidade (`Leve`, `Moderada`, `Alta`, `Intensa`) e refeições de pré e pós-treino.
+
 ---
 
 ## 🎨 Identidade Visual & Paleta de Cores

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { PlanoAlimentar, Paciente, ConteudoPlanoAlimentar, Refeicao } from '../types';
-import { Utensils, Plus, Eye, Check, X, Flame, ShieldCheck, Zap } from 'lucide-react';
+import { PlanoAlimentar, Paciente, ConteudoPlanoAlimentar, Refeicao, ProtocoloExercicio } from '../types';
+import { Utensils, Plus, Eye, Check, X, Flame, ShieldCheck, Zap, Dumbbell, Activity, Trash2, Clock, Sparkles, HeartPulse, Bike, Waves, Compass } from 'lucide-react';
+import { EXERCICIOS_PRESETS } from '../lib/neon';
 
 interface PlanosViewProps {
   planos: PlanoAlimentar[];
@@ -11,10 +12,11 @@ interface PlanosViewProps {
 export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSavePlano }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlano, setSelectedPlano] = useState<PlanoAlimentar | null>(null);
+  const [modalActiveTab, setModalActiveTab] = useState<'dieta' | 'exercicios'>('dieta');
 
   // Form State
   const [pacienteId, setPacienteId] = useState(pacientes[0]?.id || '');
-  const [tituloPlano, setTituloPlano] = useState('Plano Alimentar Personalizado');
+  const [tituloPlano, setTituloPlano] = useState('Plano Alimentar & Treino Personalizado');
   const [metaCalorica, setMetaCalorica] = useState<number>(2000);
   const [macroProteinas, setMacroProteinas] = useState('130g (26%)');
   const [macroCarboidratos, setMacroCarboidratos] = useState('210g (42%)');
@@ -43,9 +45,10 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
     },
     {
       horario: '16:00',
-      titulo: 'Lanche da Tarde',
+      titulo: 'Lanche da Tarde (Pré-Treino)',
       itens: [
         { alimento: 'Iogurte natural desnatado', quantidade: '170g' },
+        { alimento: 'Whey Protein concentrado', quantidade: '1 scoop (30g)' },
         { alimento: 'Castanha de caju', quantidade: '4 unidades' },
       ],
     },
@@ -57,6 +60,30 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
         { alimento: 'Batata inglesa cozida', quantidade: '120g' },
         { alimento: 'Brócolis e cenoura no vapor', quantidade: '100g' },
       ],
+    },
+  ]);
+
+  // Exercícios State
+  const [exercicios, setExercicios] = useState<ProtocoloExercicio[]>([
+    {
+      id: 'ex-default-1',
+      nome: 'Musculação / Treino Resistido A/B/C',
+      categoria: 'Musculação',
+      frequencia_semanal: '4x por semana',
+      duracao_minutos: 50,
+      intensidade: 'Moderada',
+      gasto_calorico_estimado: 350,
+      orientacoes: 'Executar 1h após o lanche da tarde. Foco em execução controlada e progressão de carga.',
+    },
+    {
+      id: 'ex-default-2',
+      nome: 'Cardio LISS (Caminhada Inclinada)',
+      categoria: 'Cardio',
+      frequencia_semanal: '3x por semana',
+      duracao_minutos: 30,
+      intensidade: 'Moderada',
+      gasto_calorico_estimado: 200,
+      orientacoes: 'Realizar pós-musculação para maximizar queima lipídica.',
     },
   ]);
 
@@ -75,6 +102,30 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
     ]);
   };
 
+  const handleAddPresetExercicio = (preset: ProtocoloExercicio) => {
+    setExercicios([
+      ...exercicios,
+      {
+        ...preset,
+        id: crypto.randomUUID(),
+      },
+    ]);
+  };
+
+  const handleRemoveExercicio = (index: number) => {
+    setExercicios(exercicios.filter((_, i) => i !== index));
+  };
+
+  const calculateTotalWeeklyBurn = (exList: ProtocoloExercicio[]) => {
+    return exList.reduce((acc, curr) => {
+      // Extrair número de vezes por semana
+      const match = curr.frequencia_semanal.match(/\d+/);
+      const times = match ? Number(match[0]) : 3;
+      const cal = curr.gasto_calorico_estimado || 250;
+      return acc + (cal * times);
+    }, 0);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pacienteId) return;
@@ -87,6 +138,7 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
       macro_gorduras: macroGorduras,
       observacoes_gerais: observacoesGerais,
       refeicoes,
+      exercicios,
     };
 
     onSavePlano({
@@ -101,147 +153,308 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
       {/* Top Header */}
-      <div className="glass-panel" style={{ padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderLeft: '4px solid #ef4444' }}>
+      <div className="glass-panel" style={{ padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderLeft: '4px solid #ef4444', borderRight: '4px solid #10b981' }}>
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Planos Alimentares & Dietas</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Criação e prescrição de dietas personalizadas com cálculo calórico e macronutrientes</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Planos Alimentares & Exercícios Físicos</h2>
+            <span className="badge badge-green">Nutrição + Treino</span>
+          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            Prescrição personalizada de dietas com cálculo de macros e protocolos de exercícios complementares
+          </p>
         </div>
 
         <button onClick={() => setIsModalOpen(true)} className="btn-red">
-          <Plus size={18} /> Criar Plano Alimentar
+          <Plus size={18} /> Criar Plano & Treino
         </button>
       </div>
 
       {/* Plan Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-        {planos.map((plano) => (
-          <div key={plano.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '3px solid #ef4444' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>{plano.conteudo.titulo_plano}</h3>
-                <span className="badge badge-red"><Flame size={12} /> {plano.conteudo.meta_calorica} kcal</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+        {planos.map((plano) => {
+          const exList = plano.conteudo.exercicios || [];
+          const weeklyBurn = calculateTotalWeeklyBurn(exList);
+
+          return (
+            <div key={plano.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '3px solid #ef4444' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>{plano.conteudo.titulo_plano}</h3>
+                  <span className="badge badge-red"><Flame size={12} /> {plano.conteudo.meta_calorica} kcal</span>
+                </div>
+
+                <div style={{ fontSize: '0.9rem', color: '#60a5fa', fontWeight: 600, marginBottom: '12px' }}>
+                  Paciente: {getPacienteNome(plano.paciente_id)}
+                </div>
+
+                {/* Macros Breakdown */}
+                <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ color: '#60a5fa' }}>🍗 Proteínas:</span>
+                    <strong>{plano.conteudo.macro_proteinas}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ color: '#34d399' }}>🌾 Carboidratos:</span>
+                    <strong>{plano.conteudo.macro_carboidratos}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#f87171' }}>🥑 Gorduras:</span>
+                    <strong>{plano.conteudo.macro_gorduras}</strong>
+                  </div>
+                </div>
+
+                {/* Exercises Preview Tag */}
+                <div style={{ background: 'rgba(37, 99, 235, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '10px 12px', borderRadius: '8px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#60a5fa' }}>
+                    <Dumbbell size={15} />
+                    <span><strong>{exList.length}</strong> exercícios prescritos</span>
+                  </div>
+                  {weeklyBurn > 0 && (
+                    <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>
+                      ~{weeklyBurn} kcal/sem
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div style={{ fontSize: '0.9rem', color: '#60a5fa', fontWeight: 600, marginBottom: '12px' }}>
-                Paciente: {getPacienteNome(plano.paciente_id)}
-              </div>
-
-              <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ color: '#60a5fa' }}>🍗 Proteínas:</span>
-                  <strong>{plano.conteudo.macro_proteinas}</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ color: '#34d399' }}>🌾 Carboidratos:</span>
-                  <strong>{plano.conteudo.macro_carboidratos}</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#f87171' }}>🥑 Gorduras:</span>
-                  <strong>{plano.conteudo.macro_gorduras}</strong>
-                </div>
-              </div>
+              <button onClick={() => { setSelectedPlano(plano); setModalActiveTab('dieta'); }} className="btn-secondary" style={{ width: '100%', justifyContent: 'center', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                <Eye size={16} color="#f87171" /> Visualizar Dieta & Treino
+              </button>
             </div>
-
-            <button onClick={() => setSelectedPlano(plano)} className="btn-secondary" style={{ width: '100%', justifyContent: 'center', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
-              <Eye size={16} color="#f87171" /> Visualizar Dieta Completa
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Visualizar Dieta Modal */}
+      {/* Visualizar Dieta & Exercícios Modal */}
       {selectedPlano && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
+            
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
               <div>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>{selectedPlano.conteudo.titulo_plano}</h3>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 800 }}>{selectedPlano.conteudo.titulo_plano}</h3>
                 <span style={{ fontSize: '0.85rem', color: '#60a5fa', fontWeight: 600 }}>Paciente: {getPacienteNome(selectedPlano.paciente_id)}</span>
               </div>
               <button onClick={() => setSelectedPlano(null)} className="btn-secondary" style={{ padding: '6px' }}><X size={18} /></button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <span className="badge badge-red" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🔥 {selectedPlano.conteudo.meta_calorica} kcal / dia</span>
-                <span className="badge badge-blue" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🍗 Prot: {selectedPlano.conteudo.macro_proteinas}</span>
-                <span className="badge badge-green" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🌾 Carb: {selectedPlano.conteudo.macro_carboidratos}</span>
-              </div>
-
-              <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '14px 18px', borderRadius: '10px', fontSize: '0.875rem', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <strong style={{ color: '#60a5fa' }}>Observações do Nutricionista:</strong>
-                <p style={{ marginTop: '4px', color: 'var(--text-muted)' }}>{selectedPlano.conteudo.observacoes_gerais}</p>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {selectedPlano.conteudo.refeicoes.map((ref, idx) => (
-                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <h4 style={{ fontWeight: 700, color: '#60a5fa' }}>{ref.titulo}</h4>
-                      <span className="badge badge-blue">{ref.horario}</span>
-                    </div>
-                    <ul style={{ paddingLeft: '20px', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                      {ref.itens.map((item, itemIdx) => (
-                        <li key={itemIdx} style={{ marginBottom: '4px' }}>
-                          <strong style={{ color: '#fff' }}>{item.alimento}</strong> — <span style={{ color: '#34d399' }}>{item.quantidade}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
+            {/* Modal Navigation Tabs */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', background: 'rgba(15, 23, 42, 0.7)', padding: '4px', borderRadius: '10px' }}>
+              <button
+                onClick={() => setModalActiveTab('dieta')}
+                className={modalActiveTab === 'dieta' ? 'btn-red' : 'btn-secondary'}
+                style={{ flex: 1, padding: '8px', fontSize: '0.85rem' }}
+              >
+                <Utensils size={15} /> Cardápio & Refeições ({selectedPlano.conteudo.refeicoes.length})
+              </button>
+              <button
+                onClick={() => setModalActiveTab('exercicios')}
+                className={modalActiveTab === 'exercicios' ? 'btn-blue' : 'btn-secondary'}
+                style={{ flex: 1, padding: '8px', fontSize: '0.85rem' }}
+              >
+                <Dumbbell size={15} /> Exercícios Complementares ({(selectedPlano.conteudo.exercicios || []).length})
+              </button>
             </div>
+
+            {/* TAB 1: DIETA */}
+            {modalActiveTab === 'dieta' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <span className="badge badge-red" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🔥 {selectedPlano.conteudo.meta_calorica} kcal / dia</span>
+                  <span className="badge badge-blue" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🍗 Prot: {selectedPlano.conteudo.macro_proteinas}</span>
+                  <span className="badge badge-green" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>🌾 Carb: {selectedPlano.conteudo.macro_carboidratos}</span>
+                </div>
+
+                <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '14px 18px', borderRadius: '10px', fontSize: '0.875rem', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <strong style={{ color: '#60a5fa' }}>Observações do Nutricionista:</strong>
+                  <p style={{ marginTop: '4px', color: 'var(--text-muted)' }}>{selectedPlano.conteudo.observacoes_gerais}</p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {selectedPlano.conteudo.refeicoes.map((ref, idx) => (
+                    <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <h4 style={{ fontWeight: 700, color: '#60a5fa' }}>{ref.titulo}</h4>
+                        <span className="badge badge-blue">{ref.horario}</span>
+                      </div>
+                      <ul style={{ paddingLeft: '20px', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                        {ref.itens.map((item, itemIdx) => (
+                          <li key={itemIdx} style={{ marginBottom: '4px' }}>
+                            <strong style={{ color: '#fff' }}>{item.alimento}</strong> — <span style={{ color: '#34d399' }}>{item.quantidade}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: EXERCÍCIOS FÍSICOS */}
+            {modalActiveTab === 'exercicios' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Summary Banner */}
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(16, 185, 129, 0.12) 100%)',
+                  padding: '16px 20px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(59, 130, 246, 0.35)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '12px'
+                }}>
+                  <div>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>
+                      Protocolo de Atividade Física & Gasto Energético
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '2px 0 0 0' }}>
+                      Exercícios planejados para sinergia com o balanço calórico da dieta
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block' }}>Gasto Semanal Estimado</span>
+                    <strong style={{ fontSize: '1.25rem', color: '#34d399' }}>
+                      ~{calculateTotalWeeklyBurn(selectedPlano.conteudo.exercicios || [])} kcal
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Exercises Cards List */}
+                {(!selectedPlano.conteudo.exercicios || selectedPlano.conteudo.exercicios.length === 0) ? (
+                  <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
+                    Nenhum protocolo de exercício prescrito para este plano.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {selectedPlano.conteudo.exercicios.map((ex, idx) => {
+                      const isHigh = ex.intensidade === 'Alta' || ex.intensidade === 'Intensa';
+                      return (
+                        <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '18px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{ background: 'rgba(37, 99, 235, 0.2)', padding: '8px', borderRadius: '10px', color: '#60a5fa' }}>
+                                <Dumbbell size={18} />
+                              </div>
+                              <div>
+                                <h4 style={{ fontWeight: 700, color: '#ffffff', fontSize: '1rem', margin: 0 }}>{ex.nome}</h4>
+                                <span style={{ fontSize: '0.75rem', color: '#60a5fa' }}>{ex.categoria}</span>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              <span className="badge badge-blue">
+                                <Clock size={11} /> {ex.duracao_minutos} min
+                              </span>
+                              <span className="badge badge-green">
+                                {ex.frequencia_semanal}
+                              </span>
+                              <span className={isHigh ? "badge badge-red" : "badge badge-amber"}>
+                                Intensidade: {ex.intensidade}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(15, 23, 42, 0.5)', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginTop: '10px' }}>
+                            <span style={{ color: '#94a3b8' }}>
+                              {ex.orientacoes || 'Executar conforme orientações nutricionais e manter hidratação.'}
+                            </span>
+                            {ex.gasto_calorico_estimado && (
+                              <strong style={{ color: '#f87171', whiteSpace: 'nowrap', marginLeft: '12px' }}>
+                                🔥 ~{ex.gasto_calorico_estimado} kcal/sessão
+                              </strong>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Modal Criar Plano */}
+      {/* Modal Criar Plano Alimentar & Prescrever Treino */}
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
+            
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Prescrever Novo Plano Alimentar</h3>
+              <div>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Prescrever Novo Plano & Exercícios</h3>
+                <span className="badge badge-green" style={{ marginTop: '4px' }}>Sinergia Metabólica & Calórica</span>
+              </div>
               <button onClick={() => setIsModalOpen(false)} className="btn-secondary" style={{ padding: '6px' }}><X size={18} /></button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="form-group">
-                <label className="form-label">Paciente Destino *</label>
-                <select required value={pacienteId} onChange={(e) => setPacienteId(e.target.value)} className="form-input" style={{ borderColor: 'rgba(239, 68, 68, 0.3)' }}>
-                  {pacientes.map((p) => (
-                    <option key={p.id} value={p.id}>{p.nome}</option>
-                  ))}
-                </select>
-              </div>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              {/* Informações Básicas da Dieta */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', background: 'rgba(15, 23, 42, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#f87171', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Utensils size={16} /> 1. Parâmetros Nutricionais da Dieta
+                </h4>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '14px' }}>
                 <div className="form-group">
-                  <label className="form-label">Título do Plano</label>
-                  <input type="text" required value={tituloPlano} onChange={(e) => setTituloPlano(e.target.value)} className="form-input" />
+                  <label className="form-label">Paciente Destino *</label>
+                  <select required value={pacienteId} onChange={(e) => setPacienteId(e.target.value)} className="form-input" style={{ borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                    {pacientes.map((p) => (
+                      <option key={p.id} value={p.id}>{p.nome}</option>
+                    ))}
+                  </select>
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '14px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Título do Plano</label>
+                    <input type="text" required value={tituloPlano} onChange={(e) => setTituloPlano(e.target.value)} className="form-input" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Meta Calórica (kcal)</label>
+                    <input type="number" required value={metaCalorica} onChange={(e) => setMetaCalorica(Number(e.target.value))} className="form-input" />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Proteínas</label>
+                    <input type="text" value={macroProteinas} onChange={(e) => setMacroProteinas(e.target.value)} className="form-input" placeholder="130g (26%)" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Carboidratos</label>
+                    <input type="text" value={macroCarboidratos} onChange={(e) => setMacroCarboidratos(e.target.value)} className="form-input" placeholder="210g (42%)" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Gorduras</label>
+                    <input type="text" value={macroGorduras} onChange={(e) => setMacroGorduras(e.target.value)} className="form-input" placeholder="70g (32%)" />
+                  </div>
+                </div>
+
                 <div className="form-group">
-                  <label className="form-label">Meta Calórica (kcal)</label>
-                  <input type="number" required value={metaCalorica} onChange={(e) => setMetaCalorica(Number(e.target.value))} className="form-input" />
+                  <label className="form-label">Orientações Nutricionais Gerais</label>
+                  <textarea rows={2} value={observacoesGerais} onChange={(e) => setObservacoesGerais(e.target.value)} className="form-input" />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Orientações do Nutricionista</label>
-                <textarea rows={2} value={observacoesGerais} onChange={(e) => setObservacoesGerais(e.target.value)} className="form-input" />
-              </div>
-
-              <div style={{ marginTop: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <h4 style={{ fontWeight: 700 }}>Refeições do Plano</h4>
+              {/* Refeições */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(15, 23, 42, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 style={{ fontWeight: 700, color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Utensils size={16} /> 2. Refeições do Cardápio ({refeicoes.length})
+                  </h4>
                   <button type="button" onClick={handleAddRefeicao} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.8rem', color: '#60a5fa' }}>
                     + Adicionar Refeição
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {refeicoes.map((ref, idx) => (
-                    <div key={idx} style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '8px', marginBottom: '8px' }}>
+                    <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '8px' }}>
                         <input
                           type="text"
                           value={ref.horario}
@@ -270,8 +483,130 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
                 </div>
               </div>
 
-              <button type="submit" className="btn-red" style={{ marginTop: '14px', padding: '12px' }}>
-                <Check size={18} /> Salvar Plano Alimentar no Neon DB
+              {/* SECTION 3: EXERCÍCIOS FÍSICOS COMPLEMENTARES */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', background: 'rgba(37, 99, 235, 0.08)', padding: '18px', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.35)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div>
+                    <h4 style={{ fontWeight: 800, color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.05rem', margin: 0 }}>
+                      <Dumbbell size={18} /> 3. Protocolos de Exercícios Físicos Complementares
+                    </h4>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                      Adicione modelos prontos ou personalize o treinamento do paciente
+                    </span>
+                  </div>
+                  <span className="badge badge-green">
+                    Gasto: ~{calculateTotalWeeklyBurn(exercicios)} kcal/sem
+                  </span>
+                </div>
+
+                {/* Preset Fast Add Buttons */}
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#cbd5e1', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                    ⚡ Adicionar Sugestões Prontas com 1-Clique:
+                  </span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {EXERCICIOS_PRESETS.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleAddPresetExercicio(preset)}
+                        className="btn-secondary"
+                        style={{ padding: '4px 10px', fontSize: '0.75rem', borderColor: 'rgba(59, 130, 246, 0.35)', background: 'rgba(15, 23, 42, 0.8)' }}
+                      >
+                        + {preset.categoria}: {preset.nome.split(' ')[0]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* List of active exercises in builder */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {exercicios.map((ex, idx) => (
+                    <div key={idx} style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <strong style={{ color: '#ffffff', fontSize: '0.9rem' }}>{ex.nome}</strong>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExercicio(idx)}
+                          className="btn-secondary"
+                          style={{ padding: '4px 8px', color: '#f87171', fontSize: '0.75rem' }}
+                          title="Remover exercício"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block' }}>Frequência</label>
+                          <input
+                            type="text"
+                            value={ex.frequencia_semanal}
+                            onChange={(e) => {
+                              const updated = [...exercicios];
+                              updated[idx].frequencia_semanal = e.target.value;
+                              setExercicios(updated);
+                            }}
+                            className="form-input"
+                            style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                            placeholder="4x por semana"
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block' }}>Duração (min)</label>
+                          <input
+                            type="number"
+                            value={ex.duracao_minutos}
+                            onChange={(e) => {
+                              const updated = [...exercicios];
+                              updated[idx].duracao_minutos = Number(e.target.value);
+                              setExercicios(updated);
+                            }}
+                            className="form-input"
+                            style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                            placeholder="50"
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block' }}>Gasto (kcal/sessão)</label>
+                          <input
+                            type="number"
+                            value={ex.gasto_calorico_estimado || ''}
+                            onChange={(e) => {
+                              const updated = [...exercicios];
+                              updated[idx].gasto_calorico_estimado = Number(e.target.value);
+                              setExercicios(updated);
+                            }}
+                            className="form-input"
+                            style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                            placeholder="350"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <input
+                          type="text"
+                          value={ex.orientacoes || ''}
+                          onChange={(e) => {
+                            const updated = [...exercicios];
+                            updated[idx].orientacoes = e.target.value;
+                            setExercicios(updated);
+                          }}
+                          className="form-input"
+                          style={{ fontSize: '0.8rem', padding: '6px 10px', width: '100%' }}
+                          placeholder="Orientações de execução ou nutrição pré/pós treino..."
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button type="submit" className="btn-red" style={{ marginTop: '8px', padding: '14px', fontSize: '1rem' }}>
+                <Check size={18} /> Salvar Plano Alimentar & Protocolo de Exercícios no Neon DB
               </button>
             </form>
           </div>
