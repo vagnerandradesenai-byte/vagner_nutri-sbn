@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Nutricionista } from '../types';
 import { Activity, User, LogOut, Users, Calendar, Utensils, ShieldCheck, Crown, Sparkles, Flame, HeartPulse, Stethoscope, ChevronDown, Check, UserCheck } from 'lucide-react';
 import { AuthService, DbService } from '../lib/neon';
+import { CorinthiansLogo } from './CorinthiansLogo';
 
 interface NavbarProps {
   user: Nutricionista | null;
@@ -28,22 +29,25 @@ export const Navbar: React.FC<NavbarProps> = ({ user, activeTab, setActiveTab, o
   }, []);
 
   return (
-    <header className="glass-panel" style={{ borderRadius: 0, borderTop: 0, borderLeft: 0, borderRight: 0, padding: '14px 28px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', position: 'relative', zIndex: 50 }}>
+    <header className="glass-panel hide-on-mobile" style={{ borderRadius: 0, borderTop: 0, borderLeft: 0, borderRight: 0, padding: '14px 28px', borderBottom: '1px solid rgba(59, 130, 246, 0.2)', position: 'relative', zIndex: 50 }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         
-        {/* Logo with Triad (Blue, Green, Red) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => setActiveTab('dashboard')}>
-          <div style={{ 
-            background: isMaster ? 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' : 'linear-gradient(135deg, #2563eb 0%, #10b981 100%)', 
-            padding: '10px', 
-            borderRadius: '12px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            color: '#fff', 
-            boxShadow: isMaster ? '0 4px 16px rgba(239, 68, 68, 0.4)' : '0 4px 14px rgba(37, 99, 235, 0.35)' 
-          }}>
-            {isMaster ? <Crown size={24} /> : <HeartPulse size={24} />}
+        {/* Logo with Triad (Blue, Green, Red) & Corinthians Emblem */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }} onClick={() => setActiveTab('dashboard')}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <CorinthiansLogo size={44} />
+            <div style={{ 
+              background: isMaster ? 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' : 'linear-gradient(135deg, #2563eb 0%, #10b981 100%)', 
+              padding: '8px', 
+              borderRadius: '12px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              color: '#fff', 
+              boxShadow: isMaster ? '0 4px 16px rgba(239, 68, 68, 0.4)' : '0 4px 14px rgba(37, 99, 235, 0.35)' 
+            }}>
+              {isMaster ? <Crown size={20} /> : <HeartPulse size={20} />}
+            </div>
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -59,11 +63,11 @@ export const Navbar: React.FC<NavbarProps> = ({ user, activeTab, setActiveTab, o
               )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', marginTop: '2px' }}>
+              <span className="badge badge-red" style={{ padding: '2px 6px', fontSize: '0.65rem', background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}>
+                🦅 Timão
+              </span>
               <span className="badge badge-green" style={{ padding: '2px 6px', fontSize: '0.65rem' }}>
                 <ShieldCheck size={10} /> Neon DB
-              </span>
-              <span className="badge badge-blue" style={{ padding: '2px 6px', fontSize: '0.65rem' }}>
-                {nutrisList.length} Nutris
               </span>
             </div>
           </div>

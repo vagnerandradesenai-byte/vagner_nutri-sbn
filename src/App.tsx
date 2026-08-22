@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
+import { Sidebar } from './components/Sidebar';
 import { AuthModal } from './components/AuthModal';
 import { DashboardView } from './components/DashboardView';
 import { PacientesView } from './components/PacientesView';
@@ -19,6 +20,8 @@ export const App: React.FC = () => {
   const [planos, setPlanos] = useState<PlanoAlimentar[]>([]);
   const [showNovoPacienteModal, setShowNovoPacienteModal] = useState(false);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   useEffect(() => {
     // Carregar usuário ativo da sessão
     const currentUser = AuthService.getCurrentUser();
@@ -28,6 +31,14 @@ export const App: React.FC = () => {
 
     // Carregar dados iniciais do banco Neon
     refreshData();
+
+    // Listener de responsividade
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const refreshData = () => {
@@ -75,80 +86,95 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar
-        user={user}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onLogout={handleLogout}
-        onSwitchNutri={handleSwitchNutri}
-      />
+    <div style={{ minHeight: '100vh', display: 'flex' }}>
+      {/* Sidebar Fixo quando logado */}
+      {user && (
+        <Sidebar
+          user={user}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onLogout={handleLogout}
+          onSwitchNutri={handleSwitchNutri}
+        />
+      )}
 
-      <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '24px 16px' }}>
+      <div style={{ flex: 1, marginLeft: user ? (isMobile ? 0 : '260px') : 0, marginTop: user && isMobile ? '60px' : 0, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {!user ? (
-          <AuthModal onLoginSuccess={handleLoginSuccess} />
+          <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+            <AuthModal onLoginSuccess={handleLoginSuccess} />
+          </main>
         ) : (
           <>
-            {activeTab === 'dashboard' && (
-              <DashboardView
-                user={user}
-                pacientes={pacientes}
-                consultas={consultas}
-                planos={planos}
-                onNavigate={(tab) => setActiveTab(tab)}
-                onOpenNovoPaciente={() => {
-                  setActiveTab('pacientes');
-                  setShowNovoPacienteModal(true);
-                }}
-              />
-            )}
+            <Navbar
+              user={user}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onLogout={handleLogout}
+              onSwitchNutri={handleSwitchNutri}
+            />
 
-            {activeTab === 'pacientes' && (
-              <PacientesView
-                user={user}
-                pacientes={pacientes}
-                onSavePaciente={handleSavePaciente}
-                onDeletePaciente={handleDeletePaciente}
-                showModalInitially={showNovoPacienteModal}
-                onCloseInitialModal={() => setShowNovoPacienteModal(false)}
-              />
-            )}
+            <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '24px 20px' }}>
+              {activeTab === 'dashboard' && (
+                <DashboardView
+                  user={user}
+                  pacientes={pacientes}
+                  consultas={consultas}
+                  planos={planos}
+                  onNavigate={(tab) => setActiveTab(tab)}
+                  onOpenNovoPaciente={() => {
+                    setActiveTab('pacientes');
+                    setShowNovoPacienteModal(true);
+                  }}
+                />
+              )}
 
-            {activeTab === 'consultas' && (
-              <ConsultasView
-                consultas={consultas}
-                pacientes={pacientes}
-                onSaveConsulta={handleSaveConsulta}
-              />
-            )}
+              {activeTab === 'pacientes' && (
+                <PacientesView
+                  user={user}
+                  pacientes={pacientes}
+                  onSavePaciente={handleSavePaciente}
+                  onDeletePaciente={handleDeletePaciente}
+                  showModalInitially={showNovoPacienteModal}
+                  onCloseInitialModal={() => setShowNovoPacienteModal(false)}
+                />
+              )}
 
-            {activeTab === 'planos' && (
-              <PlanosView
-                planos={planos}
-                pacientes={pacientes}
-                onSavePlano={handleSavePlano}
-              />
-            )}
+              {activeTab === 'consultas' && (
+                <ConsultasView
+                  consultas={consultas}
+                  pacientes={pacientes}
+                  onSaveConsulta={handleSaveConsulta}
+                />
+              )}
 
-            {activeTab === 'equipe' && (
-              <EquipeView
-                currentUser={user}
-                pacientes={pacientes}
-                onSelectNutri={(nutri) => {
-                  handleSwitchNutri(nutri);
-                }}
-                onNavigateToPacientes={() => {
-                  setActiveTab('pacientes');
-                }}
-              />
-            )}
+              {activeTab === 'planos' && (
+                <PlanosView
+                  planos={planos}
+                  pacientes={pacientes}
+                  onSavePlano={handleSavePlano}
+                />
+              )}
+
+              {activeTab === 'equipe' && (
+                <EquipeView
+                  currentUser={user}
+                  pacientes={pacientes}
+                  onSelectNutri={(nutri) => {
+                    handleSwitchNutri(nutri);
+                  }}
+                  onNavigateToPacientes={() => {
+                    setActiveTab('pacientes');
+                  }}
+                />
+              )}
+            </main>
+
+            <footer style={{ borderTop: '1px solid var(--border-color)', padding: '20px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+              Vagner Nutri &copy; {new Date().getFullYear()} — Conectado ao Neon Database (aws-sa-east-1). Todos os direitos reservados.
+            </footer>
           </>
         )}
-      </main>
-
-      <footer style={{ borderTop: '1px solid var(--border-color)', padding: '20px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-        Vagner Nutri &copy; {new Date().getFullYear()} — Conectado ao Neon Database (aws-sa-east-1). Todos os direitos reservados.
-      </footer>
+      </div>
     </div>
   );
 };

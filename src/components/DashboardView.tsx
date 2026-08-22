@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Paciente, Consulta, PlanoAlimentar, Nutricionista } from '../types';
-import { Users, Calendar, Utensils, Plus, Activity, CheckCircle2, TrendingUp, ShieldCheck, Crown, Sparkles, Stethoscope, UserCheck, Flame, HeartPulse, ChevronRight } from 'lucide-react';
+import { Users, Calendar, Utensils, Plus, Activity, CheckCircle2, TrendingUp, ShieldCheck, Crown, Sparkles, Stethoscope, UserCheck, Flame, HeartPulse, ChevronRight, Scale, Clock, PieChart, BarChart3, ArrowUpRight, Filter, AlertCircle } from 'lucide-react';
 import { AuthService, DbService } from '../lib/neon';
+import { calcularIMC } from '../lib/imc';
+import { CorinthiansLogo } from './CorinthiansLogo';
 
 interface DashboardViewProps {
   user: Nutricionista | null;
@@ -22,6 +24,94 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const isMaster = AuthService.isMasterUser(user);
   const nutrisList = DbService.getNutricionistas();
+
+  const [selectedNutriFilter, setSelectedNutriFilter] = useState<string>('all');
+
+  // Filtragem de atendimentos
+  const filteredConsultas = consultas.filter((c) => {
+    if (selectedNutriFilter === 'all') return true;
+    return c.nutricionista_id === selectedNutriFilter;
+  });
+
+  // Estatísticas de Atendimentos
+  const totalConsultas = filteredConsultas.length;
+  const pacientesUnicosAtendidos = new Set(filteredConsultas.map(c => c.paciente_id)).size;
+  const retornosAgendados = filteredConsultas.filter(c => Boolean(c.proximo_retorno)).length;
+  
+  // Cálculo Média IMC dos Atendimentos
+  const imcsCalculados = filteredConsultas.map(c => {
+    const p = pacientes.find(pac => pac.id === c.paciente_id);
+    return calcularIMC(c.peso || p?.peso_inicial, p?.altura).imc;
+  }).filter((v): v is number => v !== null);
+
+  const mediaImcAtendimentos = imcsCalculados.length > 0 
+    ? (imcsCalculados.reduce((a, b) => a + b, 0) / imcsCalculados.length).toFixed(1) 
+    : 'N/A';
+
+  // Categorização de IMC da OMS
+  const imcCategorias = {
+    magreza: 0,
+    eutrofia: 0,
+    sobrepeso: 0,
+    obesidade: 0,
+  };
+
+  imcsCalculados.forEach(val => {
+    if (val < 18.5) imcCategorias.magreza++;
+    else if (val < 25) imcCategorias.eutrofia++;
+    else if (val < 30) imcCategorias.sobrepeso++;
+    else imcCategorias.obesidade++;
+  });
+
+  const totalImcs = imcsCalculados.length || 1;
+
+  // --- PROMPT 3 CALCULATIONS (Scoped to logged-in user) ---
+  const meusPacientes = pacientes.filter(p => p.nutricionista_id === user?.id || p.nutricionista_nome === user?.nome || isMaster);
+  const minhasConsultas = consultas.filter(c => c.nutricionista_id === user?.id || meusPacientes.some(p => p.id === c.paciente_id));
+
+  // Card 1: Total de pacientes ativos cadastrados pelo nutricionista logado
+  const totalPacientesAtivos = meusPacientes.length;
+
+  // Card 2: Consultas da semana atual
+  const agora = new Date();
+  const inicioSemana = new Date(agora);
+  const diaSemana = agora.getDay();
+  inicioSemana.setDate(agora.getDate() - diaSemana);
+  inicioSemana.setHours(0, 0, 0, 0);
+
+  const fimSemana = new Date(inicioSemana);
+  fimSemana.setDate(inicioSemana.getDate() + 6);
+  fimSemana.setHours(23, 59, 59, 999);
+
+  const consultasDaSemana = minhasConsultas.filter(c => {
+    if (!c.data_consulta) return false;
+    const d = new Date(c.data_consulta + 'T00:00:00');
+    return d >= inicioSemana && d <= fimSemana;
+  }).length;
+
+  // Card 3: Pacientes sem retorno (> 30 dias sem consulta e sem próximo retorno agendado)
+  const pacientesSemRetorno = meusPacientes.filter(p => {
+    const pConsultas = minhasConsultas.filter(c => c.paciente_id === p.id);
+    
+    const temProximoRetorno = pConsultas.some(c => {
+      if (!c.proximo_retorno) return false;
+      const dRetorno = new Date(c.proximo_retorno + 'T00:00:00');
+      return dRetorno >= agora;
+    });
+
+    if (temProximoRetorno) return false;
+
+    let ultimaDataStr = p.created_at || '2026-07-01';
+    if (pConsultas.length > 0) {
+      const sorted = [...pConsultas].sort((a, b) => new Date(b.data_consulta).getTime() - new Date(a.data_consulta).getTime());
+      ultimaDataStr = sorted[0].data_consulta;
+    }
+
+    const ultimaData = new Date(ultimaDataStr);
+    const diffDias = Math.floor((agora.getTime() - ultimaData.getTime()) / (1000 * 60 * 60 * 24));
+
+    return diffDias >= 20 || diffDias > 30;
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -46,24 +136,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         }} />
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-              <span className="badge badge-green"><CheckCircle2 size={12} /> Neon PostgreSQL 18</span>
-              <span className="badge badge-blue">aws-sa-east-1 (São Paulo)</span>
-              {isMaster && (
-                <span className="badge badge-amber" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Crown size={12} /> Painel Master Ativo
-                </span>
-              )}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+            <div style={{ background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '16px', border: '1px solid rgba(239,68,68,0.3)', boxShadow: '0 8px 20px rgba(0,0,0,0.5)' }}>
+              <CorinthiansLogo size={56} showText={true} />
             </div>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#ffffff', marginBottom: '6px' }}>
-              {isMaster ? 'Painel Executivo Master — Vagner Nutri' : `Painel Clínico — ${user?.nome || 'Vagner Nutri'}`}
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              {isMaster 
-                ? 'Supervisão centralizada de todos os pacientes, consultas e nutricionistas cadastrados no banco de dados Neon.' 
-                : 'Gerencie suas consultas, acompanhe a evolução antropométrica e construa planos alimentares personalizados.'}
-            </p>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                <span className="badge badge-red" style={{ background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}>
+                  🦅 S.C. Corinthians Paulista
+                </span>
+                <span className="badge badge-green"><CheckCircle2 size={12} /> Neon PostgreSQL 18</span>
+                <span className="badge badge-blue">aws-sa-east-1 (São Paulo)</span>
+                {isMaster && (
+                  <span className="badge badge-amber" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Crown size={12} /> Painel Master Ativo
+                  </span>
+                )}
+              </div>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#ffffff', marginBottom: '6px' }}>
+                {isMaster ? 'Painel Executivo Master — Vagner Nutri' : `Painel Clínico — ${user?.nome || 'Vagner Nutri'}`}
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                {isMaster 
+                  ? 'Supervisão centralizada de todos os pacientes, consultas e nutricionistas cadastrados no banco de dados Neon.' 
+                  : 'Gerencie suas consultas, acompanhe a evolução antropométrica e construa planos alimentares personalizados.'}
+              </p>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -77,80 +175,280 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Metrics Cards: AZUL (Pacientes), VERDE (Consultas), VERMELHO (Planos/Metas), ÂMBAR (Equipe) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+      {/* --- PROMPT 3: CARDS DE INFORMAÇÃO PRINCIPAIS --- */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
         
-        {/* Card 1: AZUL (Pacientes) */}
+        {/* Card 1 — Total de pacientes ativos */}
         <div 
           className="glass-panel glass-panel-hover" 
-          style={{ padding: '24px', cursor: 'pointer', borderTop: '3px solid #3b82f6' }} 
+          style={{ padding: '24px', cursor: 'pointer', borderTop: '4px solid #3b82f6', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }} 
           onClick={() => onNavigate('pacientes')}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#94a3b8' }}>
-              {isMaster ? 'Pacientes (Base Global)' : 'Pacientes Ativos'}
-            </span>
-            <div style={{ background: 'rgba(37, 99, 235, 0.18)', color: '#60a5fa', padding: '10px', borderRadius: '12px', boxShadow: '0 0 12px rgba(37, 99, 235, 0.3)' }}>
-              <Users size={22} />
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#94a3b8' }}>
+                Total de Pacientes Ativos
+              </span>
+              <div style={{ background: 'rgba(37, 99, 235, 0.18)', color: '#60a5fa', padding: '10px', borderRadius: '12px', boxShadow: '0 0 12px rgba(37, 99, 235, 0.3)' }}>
+                <Users size={24} />
+              </div>
             </div>
+            <div style={{ fontSize: '2.8rem', fontWeight: 800, color: '#ffffff' }}>{totalPacientesAtivos}</div>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#ffffff' }}>{pacientes.length}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#60a5fa', marginTop: '8px' }}>
-            <TrendingUp size={14} /> Cadastrados no Neon DB
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#60a5fa', marginTop: '12px' }}>
+            <TrendingUp size={14} /> Cadastrados por {user?.nome || 'Nutricionista Logado'}
           </div>
         </div>
 
-        {/* Card 2: VERDE (Consultas / Antropometria) */}
+        {/* Card 2 — Consultas da semana */}
         <div 
           className="glass-panel glass-panel-hover" 
-          style={{ padding: '24px', cursor: 'pointer', borderTop: '3px solid #10b981' }} 
+          style={{ padding: '24px', cursor: 'pointer', borderTop: '4px solid #10b981', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }} 
           onClick={() => onNavigate('consultas')}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#94a3b8' }}>Consultas Realizadas</span>
-            <div style={{ background: 'rgba(16, 185, 129, 0.18)', color: '#34d399', padding: '10px', borderRadius: '12px', boxShadow: '0 0 12px rgba(16, 185, 129, 0.3)' }}>
-              <Calendar size={22} />
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#94a3b8' }}>Consultas da Semana</span>
+              <div style={{ background: 'rgba(16, 185, 129, 0.18)', color: '#34d399', padding: '10px', borderRadius: '12px', boxShadow: '0 0 12px rgba(16, 185, 129, 0.3)' }}>
+                <Calendar size={24} />
+              </div>
             </div>
+            <div style={{ fontSize: '2.8rem', fontWeight: 800, color: '#ffffff' }}>{consultasDaSemana}</div>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#ffffff' }}>{consultas.length}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#34d399', marginTop: '8px' }}>
-            <Activity size={14} /> Avaliação antropométrica
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#34d399', marginTop: '12px' }}>
+            <Activity size={14} /> Registradas na semana atual
           </div>
         </div>
 
-        {/* Card 3: VERMELHO (Planos & Energia / Dietas) */}
+        {/* Card 3 — Pacientes sem retorno */}
         <div 
-          className="glass-panel glass-panel-hover" 
-          style={{ padding: '24px', cursor: 'pointer', borderTop: '3px solid #ef4444' }} 
-          onClick={() => onNavigate('planos')}
+          className="glass-panel" 
+          style={{ padding: '24px', borderTop: '4px solid #ef4444', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gridColumn: 'span 1' }} 
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#94a3b8' }}>Planos Alimentares</span>
-            <div style={{ background: 'rgba(239, 68, 68, 0.18)', color: '#f87171', padding: '10px', borderRadius: '12px', boxShadow: '0 0 12px rgba(239, 68, 68, 0.3)' }}>
-              <Flame size={22} />
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f87171', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertCircle size={18} /> Pacientes sem Retorno (&gt; 30 dias)
+              </span>
+              <span className="badge badge-red" style={{ fontSize: '0.75rem', fontWeight: 800 }}>
+                {pacientesSemRetorno.length}
+              </span>
             </div>
+
+            {pacientesSemRetorno.length === 0 ? (
+              <div style={{ padding: '16px 0', color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic', textAlign: 'center' }}>
+                Nenhum paciente sem retorno no momento
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '140px', overflowY: 'auto' }}>
+                {pacientesSemRetorno.map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => onNavigate('pacientes')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    className="glass-panel-hover"
+                    title="Clique para abrir o perfil do paciente"
+                  >
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      {p.nome}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: '#f87171', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      Ver Perfil <ChevronRight size={14} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#ffffff' }}>{planos.length}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#f87171', marginTop: '8px' }}>
-            <Utensils size={14} /> Metas calóricas & macros
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '12px' }}>
+            * Pacientes cuja última consulta foi há mais de 30 dias e sem próximo retorno agendado
           </div>
         </div>
 
-        {/* Card 4: Equipe Médica */}
-        <div 
-          className="glass-panel glass-panel-hover" 
-          style={{ padding: '24px', cursor: 'pointer', borderTop: '3px solid #f59e0b' }} 
-          onClick={() => onNavigate('equipe')}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#94a3b8' }}>Corpo Clínico</span>
-            <div style={{ background: 'rgba(245, 158, 11, 0.18)', color: '#fbbf24', padding: '10px', borderRadius: '12px', boxShadow: '0 0 12px rgba(245, 158, 11, 0.3)' }}>
-              <Stethoscope size={22} />
+      </div>
+
+      {/* DASHBOARD ANALÍTICO DE TODOS OS ATENDIMENTOS (NOVO) */}
+      <div className="glass-panel" style={{ padding: '28px', borderTop: '4px solid #10b981', background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.7) 100%)' }}>
+        
+        {/* Header do Dashboard de Atendimentos */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ background: 'rgba(16, 185, 129, 0.2)', padding: '8px', borderRadius: '10px', color: '#34d399', display: 'flex' }}>
+                <BarChart3 size={24} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                  Dashboard Analítico de Todos os Atendimentos
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '2px 0 0 0' }}>
+                  Indicadores de consultas clínicas, acompanhamento de retornos e perfil nutricional antropométrico
+                </p>
+              </div>
             </div>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#fbbf24' }}>{nutrisList.length}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#fbbf24', marginTop: '8px' }}>
-            <UserCheck size={14} /> Escolher nutricionista
+
+          {/* Filtro por Nutricionista */}
+          {isMaster && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Filter size={16} color="#60a5fa" />
+              <select
+                value={selectedNutriFilter}
+                onChange={(e) => setSelectedNutriFilter(e.target.value)}
+                className="form-input"
+                style={{ height: '40px', fontSize: '0.85rem', paddingLeft: '12px', width: '220px', cursor: 'pointer', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+              >
+                <option value="all">👥 Todos os Atendimentos ({consultas.length})</option>
+                {nutrisList.map(n => {
+                  const count = consultas.filter(c => c.nutricionista_id === n.id).length;
+                  return (
+                    <option key={n.id} value={n.id}>{n.nome} ({count})</option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* 4 KPIs dos Atendimentos */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+          
+          <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '18px', borderRadius: '14px' }}>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', fontWeight: 600 }}>Total de Consultas</span>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#34d399', marginTop: '4px' }}>{totalConsultas}</div>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginTop: '4px' }}>
+              Histórico no Neon PostgreSQL
+            </span>
+          </div>
+
+          <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '18px', borderRadius: '14px' }}>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', fontWeight: 600 }}>Pacientes Atendidos</span>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#60a5fa', marginTop: '4px' }}>{pacientesUnicosAtendidos}</div>
+            <span style={{ fontSize: '0.75rem', color: '#60a5fa', display: 'block', marginTop: '4px' }}>
+              {Math.round((pacientesUnicosAtendidos / (pacientes.length || 1)) * 100)}% da base total cadastrada
+            </span>
+          </div>
+
+          <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '18px', borderRadius: '14px' }}>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', fontWeight: 600 }}>Retornos Programados</span>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fbbf24', marginTop: '4px' }}>{retornosAgendados}</div>
+            <span style={{ fontSize: '0.75rem', color: '#fbbf24', display: 'block', marginTop: '4px' }}>
+              Próximas sessões agendadas
+            </span>
+          </div>
+
+          <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '18px', borderRadius: '14px' }}>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', fontWeight: 600 }}>IMC Médio dos Atendimentos</span>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f87171', marginTop: '4px' }}>{mediaImcAtendimentos} <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>kg/m²</span></div>
+            <span style={{ fontSize: '0.75rem', color: '#f87171', display: 'block', marginTop: '4px' }}>
+              Classificação Média OMS
+            </span>
+          </div>
+        </div>
+
+        {/* Grade de Análise: Categorização de IMC OMS & Volume por Nutricionista */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+          
+          {/* Distribuição por Perfil de IMC (OMS) */}
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '20px', borderRadius: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <Scale size={18} color="#34d399" />
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Perfil Nutricional por IMC (OMS)</h4>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              
+              {/* Eutrofia */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px' }}>
+                  <span style={{ color: '#34d399', fontWeight: 600 }}>Peso Normal (Eutrofia)</span>
+                  <strong style={{ color: '#fff' }}>{imcCategorias.eutrofia} ({Math.round((imcCategorias.eutrofia / totalImcs) * 100)}%)</strong>
+                </div>
+                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ width: `${(imcCategorias.eutrofia / totalImcs) * 100}%`, height: '100%', background: '#10b981' }}></div>
+                </div>
+              </div>
+
+              {/* Sobrepeso */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px' }}>
+                  <span style={{ color: '#fbbf24', fontWeight: 600 }}>Sobrepeso (Pré-obesidade)</span>
+                  <strong style={{ color: '#fff' }}>{imcCategorias.sobrepeso} ({Math.round((imcCategorias.sobrepeso / totalImcs) * 100)}%)</strong>
+                </div>
+                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ width: `${(imcCategorias.sobrepeso / totalImcs) * 100}%`, height: '100%', background: '#f59e0b' }}></div>
+                </div>
+              </div>
+
+              {/* Obesidade */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px' }}>
+                  <span style={{ color: '#f87171', fontWeight: 600 }}>Obesidade (Grau I, II e III)</span>
+                  <strong style={{ color: '#fff' }}>{imcCategorias.obesidade} ({Math.round((imcCategorias.obesidade / totalImcs) * 100)}%)</strong>
+                </div>
+                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ width: `${(imcCategorias.obesidade / totalImcs) * 100}%`, height: '100%', background: '#ef4444' }}></div>
+                </div>
+              </div>
+
+              {/* Magreza */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px' }}>
+                  <span style={{ color: '#60a5fa', fontWeight: 600 }}>Abaixo do Peso (Magreza)</span>
+                  <strong style={{ color: '#fff' }}>{imcCategorias.magreza} ({Math.round((imcCategorias.magreza / totalImcs) * 100)}%)</strong>
+                </div>
+                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ width: `${(imcCategorias.magreza / totalImcs) * 100}%`, height: '100%', background: '#3b82f6' }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Atendimentos Recentes & Próximos Retornos */}
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '20px', borderRadius: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={18} color="#60a5fa" />
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Histórico Recente de Atendimentos</h4>
+              </div>
+              <button onClick={() => onNavigate('consultas')} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>
+                Ver Todos <ArrowUpRight size={12} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {filteredConsultas.slice(0, 4).map((c) => {
+                const pac = pacientes.find(p => p.id === c.paciente_id);
+                const imcRes = calcularIMC(c.peso || pac?.peso_inicial, pac?.altura);
+                return (
+                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#ffffff' }}>{pac?.nome || 'Paciente'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
+                        Data: {c.data_consulta} • Peso: {c.peso ? `${c.peso} kg` : 'N/I'}
+                      </div>
+                    </div>
+                    {imcRes.imc ? (
+                      <span className="badge" style={{ background: imcRes.corBg, color: imcRes.corTexto, border: `1px solid ${imcRes.corBorder}`, fontSize: '0.7rem', fontWeight: 700 }}>
+                        IMC: {imcRes.imc}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>-</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -239,26 +537,34 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {pacientes.slice(0, 5).map((paciente) => (
-            <div key={paciente.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ fontWeight: 700, fontSize: '1rem', color: '#ffffff' }}>{paciente.nome}</div>
-                  <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>
-                    {paciente.nutricionista_nome || 'Dr. Vagner (Master)'}
-                  </span>
+          {pacientes.slice(0, 5).map((paciente) => {
+            const imcRes = calcularIMC(paciente.peso_inicial, paciente.altura);
+            return (
+              <div key={paciente.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', border: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div style={{ fontWeight: 700, fontSize: '1rem', color: '#ffffff' }}>{paciente.nome}</div>
+                    <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>
+                      {paciente.nutricionista_nome || 'Dr. Vagner (Master)'}
+                    </span>
+                    {imcRes.imc && (
+                      <span className="badge" style={{ background: imcRes.corBg, color: imcRes.corTexto, border: `1px solid ${imcRes.corBorder}`, fontSize: '0.7rem', fontWeight: 700 }}>
+                        IMC: {imcRes.imc} ({imcRes.classificacao})
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '12px', marginTop: '4px' }}>
+                    <span>Objetivo: <strong style={{ color: '#34d399' }}>{paciente.objetivos?.join(', ') || 'Geral'}</strong></span>
+                    <span>•</span>
+                    <span>WhatsApp: {paciente.whatsapp || 'Não informado'}</span>
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '12px', marginTop: '4px' }}>
-                  <span>Objetivo: <strong style={{ color: '#34d399' }}>{paciente.objetivos?.join(', ') || 'Geral'}</strong></span>
-                  <span>•</span>
-                  <span>WhatsApp: {paciente.whatsapp || 'Não informado'}</span>
-                </div>
+                <button onClick={() => onNavigate('pacientes')} className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.8rem' }}>
+                  Ver Ficha
+                </button>
               </div>
-              <button onClick={() => onNavigate('pacientes')} className="btn-secondary" style={{ padding: '6px 14px', fontSize: '0.8rem' }}>
-                Ver Ficha
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <circle cx="256" cy="256" r="230" fill="none" stroke="url(#brandGrad)" stroke-width="12" opacity="0.8"/>
+  
+  <!-- Corinthians Shield Silhouette & Stethoscope / Heart Pulse -->
+  <g transform="translate(106, 106) scale(0.6)">
+    <!-- Anchor & Oars behind shield -->
+    <path d="M250 80 L350 400 M350 80 L250 400" stroke="#f59e0b" stroke-width="24" stroke-linecap="round" opacity="0.9"/>
+    <circle cx="300" cy="80" r="30" fill="none" stroke="#f59e0b" stroke-width="16"/>
+    
+    <!-- Shield -->
+    <path d="M150 140 C150 140, 300 100, 450 140 C450 280, 420 400, 300 480 C180 400, 150 280, 150 140 Z" fill="#0f172a" stroke="#ffffff" stroke-width="16"/>
+    
+    <!-- Inner Red Ring -->
+    <circle cx="300" cy="270" r="100" fill="#dc2626" stroke="#ffffff" stroke-width="12"/>
+    
+    <!-- White Flag Stripes -->
+    <path d="M220 270 L380 270 M220 240 L380 240 M220 300 L380 300" stroke="#ffffff" stroke-width="12"/>
+    
+    <!-- Stars -->
+    <polygon points="300,30 308,50 330,50 312,62 318,82 300,70 282,82 288,62 270,50 292,50" fill="#f59e0b"/>
+  </g>
+</svg>

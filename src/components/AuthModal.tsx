@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AuthService, DbService } from '../lib/neon';
 import { Nutricionista } from '../types';
 import { Lock, Mail, User, ShieldCheck, ArrowRight, HeartPulse, Crown, Sparkles, CheckCircle, Stethoscope, ChevronRight, UserCheck } from 'lucide-react';
+import { CorinthiansLogo } from './CorinthiansLogo';
 
 interface AuthModalProps {
   onLoginSuccess: (user: Nutricionista) => void;
@@ -53,14 +54,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLoginSuccess }) => {
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div className="glass-panel" style={{ width: '100%', maxWidth: '580px', padding: '36px 32px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
         
-        {/* Header with Tricolor Icon */}
+        {/* Header with Tricolor Icon & Corinthians Logo */}
         <div style={{ textAlign: 'center', marginBottom: '22px' }}>
-          <div style={{ display: 'inline-flex', background: 'linear-gradient(135deg, #2563eb 0%, #10b981 100%)', padding: '14px', borderRadius: '16px', color: '#fff', marginBottom: '14px', boxShadow: '0 8px 24px rgba(37,99,235,0.4)' }}>
-            <HeartPulse size={32} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '14px' }}>
+            <CorinthiansLogo size={56} />
+            <div style={{ display: 'inline-flex', background: 'linear-gradient(135deg, #2563eb 0%, #10b981 100%)', padding: '14px', borderRadius: '16px', color: '#fff', boxShadow: '0 8px 24px rgba(37,99,235,0.4)' }}>
+              <HeartPulse size={30} />
+            </div>
           </div>
-          <h2 style={{ fontSize: '1.7rem', fontWeight: 800, marginBottom: '6px', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: '1.7rem', fontWeight: 800, marginBottom: '4px', letterSpacing: '-0.02em' }}>
             <span style={{ color: '#60a5fa' }}>Vagner</span><span style={{ color: '#34d399' }}>Nutri</span>
           </h2>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', padding: '2px 10px', borderRadius: '9999px', fontSize: '0.75rem', color: '#fca5a5', fontWeight: 700, marginBottom: '8px' }}>
+            🦅 S.C. Corinthians Paulista — Vai Corinthians!
+          </div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
             Selecione seu perfil de nutricionista ou entre com suas credenciais Neon
           </p>

@@ -284,3 +284,43 @@ input, textarea, select {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.25);
 }
+
+/* ==========================================================================
+   RESPONSIVIDADE MOBILE & PWA MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 767px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Padding interno reduzido no celular */
+  .glass-panel {
+    padding: 16px !important;
+  }
+
+  /* Modal de anamnese e cadastro responsivos */
+  .modal-content {
+    width: 95% !important;
+    max-height: 90vh !important;
+    padding: 16px !important;
+  }
+
+  /* Tabelas com rolagem horizontal suave no celular */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ajuste de tamanho de fontes para celular */
+  h1 { font-size: 1.4rem !important; }
+  h2 { font-size: 1.25rem !important; }
+  h3 { font-size: 1.1rem !important; }
+}
+
+@media (min-width: 768px) {
+  .show-on-mobile {
+    display: none !important;
+  }
+}
+

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Paciente, Nutricionista } from '../types';
-import { Users, Plus, Search, User, Phone, Mail, FileText, Trash2, Edit3, X, Check, Activity, Crown, Filter, Sparkles, Stethoscope, AlertCircle, Heart } from 'lucide-react';
+import { Users, Plus, Search, User, Phone, Mail, FileText, Trash2, Edit3, X, Check, Activity, Crown, Filter, Sparkles, Stethoscope, AlertCircle, Heart, Scale } from 'lucide-react';
 import { AuthService, DbService } from '../lib/neon';
+import { calcularIMC } from '../lib/imc';
 
 interface PacientesViewProps {
   pacientes: Paciente[];
@@ -259,127 +260,191 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
 
       {/* Patient Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
-        {filtered.map((paciente) => (
-          <div key={paciente.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '3px solid #2563eb' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>{paciente.nome}</h3>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{paciente.sexo || 'Gênero não informado'}</span>
+        {filtered.map((paciente) => {
+          const imcRes = calcularIMC(paciente.peso_inicial, paciente.altura);
+          return (
+            <div key={paciente.id} className="glass-panel glass-panel-hover" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '3px solid #2563eb' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>{paciente.nome}</h3>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{paciente.sexo || 'Gênero não informado'}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button onClick={() => handleEdit(paciente)} className="btn-secondary" style={{ padding: '6px', borderRadius: '6px', color: '#60a5fa' }} title="Editar paciente">
+                      <Edit3 size={14} />
+                    </button>
+                    <button onClick={() => onDeletePaciente(paciente.id)} className="btn-secondary" style={{ padding: '6px', borderRadius: '6px', color: '#f87171' }} title="Excluir paciente">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => handleEdit(paciente)} className="btn-secondary" style={{ padding: '6px', borderRadius: '6px', color: '#60a5fa' }} title="Editar paciente">
-                    <Edit3 size={14} />
-                  </button>
-                  <button onClick={() => onDeletePaciente(paciente.id)} className="btn-secondary" style={{ padding: '6px', borderRadius: '6px', color: '#f87171' }} title="Excluir paciente">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
 
-              {/* Master Tag: Nutricionista Responsável */}
-              {isMaster && (
+                {/* Master Tag: Nutricionista Responsável */}
+                {isMaster && (
+                  <div style={{
+                    background: 'rgba(37, 99, 235, 0.12)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '0.75rem',
+                    color: '#60a5fa',
+                    marginBottom: '12px'
+                  }}>
+                    <Stethoscope size={13} />
+                    <span>Resp: <strong>{paciente.nutricionista_nome || 'Dr. Vagner Andrade (Master)'}</strong></span>
+                  </div>
+                )}
+
+                {/* Badge IMC do Paciente */}
                 <div style={{
-                  background: 'rgba(37, 99, 235, 0.12)',
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  padding: '6px 10px',
-                  borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.75rem',
-                  color: '#60a5fa',
+                  justifyContent: 'space-between',
+                  background: imcRes.corBg,
+                  border: `1px solid ${imcRes.corBorder}`,
+                  padding: '8px 12px',
+                  borderRadius: '10px',
                   marginBottom: '14px'
                 }}>
-                  <Stethoscope size={13} />
-                  <span>Resp: <strong>{paciente.nutricionista_nome || 'Dr. Vagner Andrade (Master)'}</strong></span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Scale size={16} color={imcRes.corTexto} />
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#cbd5e1' }}>IMC:</span>
+                    <strong style={{ fontSize: '0.95rem', fontWeight: 800, color: imcRes.corTexto }}>
+                      {imcRes.imc ? `${imcRes.imc} kg/m²` : 'N/I'}
+                    </strong>
+                  </div>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: imcRes.corTexto,
+                    background: 'rgba(0,0,0,0.3)',
+                    padding: '3px 8px',
+                    borderRadius: '6px'
+                  }}>
+                    {imcRes.classificacao}
+                  </span>
                 </div>
-              )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Phone size={14} color="#60a5fa" /> {paciente.whatsapp || 'WhatsApp não informado'}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Phone size={14} color="#60a5fa" /> {paciente.whatsapp || 'WhatsApp não informado'}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Mail size={14} color="#60a5fa" /> {paciente.email || 'E-mail não informado'}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Mail size={14} color="#60a5fa" /> {paciente.email || 'E-mail não informado'}
+
+                {/* Badges: Verde para Objetivos, Vermelho para Restrições/Alergias */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+                  {paciente.objetivos?.map((obj, i) => (
+                    <span key={i} className="badge badge-green">{obj}</span>
+                  ))}
+                  {paciente.restricoes_alimentares?.map((rest, i) => (
+                    <span key={i} className="badge badge-red">{rest}</span>
+                  ))}
+                  {paciente.alergias?.map((alerg, i) => (
+                    <span key={i} className="badge badge-red" style={{ background: 'rgba(225, 29, 72, 0.2)' }}>⚠️ {alerg}</span>
+                  ))}
                 </div>
               </div>
 
-              {/* Badges: Verde para Objetivos, Vermelho para Restrições/Alergias */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                {paciente.objetivos?.map((obj, i) => (
-                  <span key={i} className="badge badge-green">{obj}</span>
-                ))}
-                {paciente.restricoes_alimentares?.map((rest, i) => (
-                  <span key={i} className="badge badge-red">{rest}</span>
-                ))}
-                {paciente.alergias?.map((alerg, i) => (
-                  <span key={i} className="badge badge-red" style={{ background: 'rgba(225, 29, 72, 0.2)' }}>⚠️ {alerg}</span>
-                ))}
-              </div>
+              <button
+                onClick={() => setSelectedPaciente(paciente)}
+                className="btn-secondary"
+                style={{ width: '100%', justifyContent: 'center', fontSize: '0.85rem', marginTop: '12px', borderColor: 'rgba(59, 130, 246, 0.3)' }}
+              >
+                <FileText size={16} color="#60a5fa" /> Ver Anamnese Completa
+              </button>
             </div>
-
-            <button
-              onClick={() => setSelectedPaciente(paciente)}
-              className="btn-secondary"
-              style={{ width: '100%', justifyContent: 'center', fontSize: '0.85rem', marginTop: '12px', borderColor: 'rgba(59, 130, 246, 0.3)' }}
-            >
-              <FileText size={16} color="#60a5fa" /> Ver Anamnese Completa
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Modal Anamnese Completa */}
-      {selectedPaciente && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99, padding: '20px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
-              <div>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Ficha de Anamnese — {selectedPaciente.nome}</h3>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                  <span className="badge badge-green">Neon PostgreSQL Record</span>
-                  {selectedPaciente.nutricionista_nome && (
-                    <span className="badge badge-blue">Nutri: {selectedPaciente.nutricionista_nome}</span>
-                  )}
+      {selectedPaciente && (() => {
+        const selImcRes = calcularIMC(selectedPaciente.peso_inicial, selectedPaciente.altura);
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99, padding: '20px' }}>
+            <div className="glass-panel" style={{ width: '100%', maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>Ficha de Anamnese — {selectedPaciente.nome}</h3>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                    <span className="badge badge-green">Neon PostgreSQL Record</span>
+                    {selectedPaciente.nutricionista_nome && (
+                      <span className="badge badge-blue">Nutri: {selectedPaciente.nutricionista_nome}</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <button onClick={() => setSelectedPaciente(null)} className="btn-secondary" style={{ padding: '6px' }}><X size={18} /></button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', fontSize: '0.9rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'rgba(15, 23, 42, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <div><strong>Peso Inicial:</strong> <span style={{ color: '#34d399' }}>{selectedPaciente.peso_inicial ? `${selectedPaciente.peso_inicial} kg` : 'N/I'}</span></div>
-                <div><strong>Altura:</strong> <span style={{ color: '#60a5fa' }}>{selectedPaciente.altura ? `${selectedPaciente.altura} m` : 'N/I'}</span></div>
-                <div><strong>Refeições/dia:</strong> {selectedPaciente.refeicoes_por_dia || 'N/I'}</div>
-                <div><strong>Ingestão de Água:</strong> {selectedPaciente.litros_agua ? `${selectedPaciente.litros_agua} L/dia` : 'N/I'}</div>
+                <button onClick={() => setSelectedPaciente(null)} className="btn-secondary" style={{ padding: '6px' }}><X size={18} /></button>
               </div>
 
-              <div>
-                <strong style={{ color: '#34d399' }}>Objetivos:</strong>
-                <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>{selectedPaciente.objetivo_texto || selectedPaciente.objetivos?.join(', ') || 'Nenhum informado'}</p>
-              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', fontSize: '0.9rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'rgba(15, 23, 42, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <div><strong>Peso Inicial:</strong> <span style={{ color: '#34d399' }}>{selectedPaciente.peso_inicial ? `${selectedPaciente.peso_inicial} kg` : 'N/I'}</span></div>
+                  <div><strong>Altura:</strong> <span style={{ color: '#60a5fa' }}>{selectedPaciente.altura ? `${selectedPaciente.altura} m` : 'N/I'}</span></div>
+                  <div><strong>Refeições/dia:</strong> {selectedPaciente.refeicoes_por_dia || 'N/I'}</div>
+                  <div><strong>Ingestão de Água:</strong> {selectedPaciente.litros_agua ? `${selectedPaciente.litros_agua} L/dia` : 'N/I'}</div>
+                </div>
 
-              <div>
-                <strong style={{ color: '#60a5fa' }}>Atividade Física:</strong>
-                <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>{selectedPaciente.atividade_fisica ? `Sim (${selectedPaciente.atividade_fisica_descricao || 'Sem descrição'})` : 'Não pratica'}</p>
-              </div>
+                {/* Bloco de Destaque do IMC */}
+                <div style={{
+                  background: selImcRes.corBg,
+                  border: `1px solid ${selImcRes.corBorder}`,
+                  padding: '14px 18px',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '10px', color: selImcRes.corTexto, display: 'flex' }}>
+                      <Scale size={22} />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block' }}>Índice de Massa Corporal (IMC OMS)</span>
+                      <strong style={{ fontSize: '1.15rem', fontWeight: 800, color: selImcRes.corTexto }}>
+                        {selImcRes.imc ? `${selImcRes.imc} kg/m²` : 'Não calculado'} — {selImcRes.classificacao}
+                      </strong>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 500 }}>
+                    {selImcRes.descricao}
+                  </span>
+                </div>
 
-              <div>
-                <strong style={{ color: '#f87171' }}>Restrições & Alergias:</strong>
-                <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
-                  {selectedPaciente.restricoes_alimentares?.length ? `Restrições: ${selectedPaciente.restricoes_alimentares.join(', ')}` : 'Sem restrições declaradas.'}
-                </p>
-              </div>
+                <div>
+                  <strong style={{ color: '#34d399' }}>Objetivos:</strong>
+                  <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>{selectedPaciente.objetivo_texto || selectedPaciente.objetivos?.join(', ') || 'Nenhum informado'}</p>
+                </div>
 
-              <div>
-                <strong>Observações Gerais:</strong>
-                <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>{selectedPaciente.observacoes || 'Sem observações.'}</p>
+                <div>
+                  <strong style={{ color: '#60a5fa' }}>Atividade Física:</strong>
+                  <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>{selectedPaciente.atividade_fisica ? `Sim (${selectedPaciente.atividade_fisica_descricao || 'Sem descrição'})` : 'Não pratica'}</p>
+                </div>
+
+                <div>
+                  <strong style={{ color: '#f87171' }}>Restrições & Alergias:</strong>
+                  <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {selectedPaciente.restricoes_alimentares?.length ? `Restrições: ${selectedPaciente.restricoes_alimentares.join(', ')}` : 'Sem restrições declaradas.'}
+                  </p>
+                </div>
+
+                <div>
+                  <strong>Observações Gerais:</strong>
+                  <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>{selectedPaciente.observacoes || 'Sem observações.'}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Modal Cadastro/Edição de Paciente */}
       {isModalOpen && (
@@ -434,6 +499,43 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
                   <input type="number" step="0.01" value={altura} onChange={(e) => setAltura(e.target.value ? Number(e.target.value) : '')} className="form-input" placeholder="1.68" />
                 </div>
               </div>
+
+              {/* Preview Dinâmico do IMC no Formulário */}
+              {(() => {
+                const formImcRes = calcularIMC(pesoInicial !== '' ? Number(pesoInicial) : undefined, altura !== '' ? Number(altura) : undefined);
+                return (
+                  <div style={{
+                    background: formImcRes.corBg,
+                    border: `1px solid ${formImcRes.corBorder}`,
+                    padding: '12px 16px',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '10px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Scale size={18} color={formImcRes.corTexto} />
+                      <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
+                        IMC Estimado: <strong style={{ color: formImcRes.corTexto, fontSize: '1rem' }}>{formImcRes.imc ? `${formImcRes.imc} kg/m²` : 'Aguardando peso e altura'}</strong>
+                      </span>
+                    </div>
+                    {formImcRes.imc && (
+                      <span style={{
+                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        color: formImcRes.corTexto,
+                        background: 'rgba(0,0,0,0.3)',
+                        padding: '4px 10px',
+                        borderRadius: '6px'
+                      }}>
+                        {formImcRes.classificacao} — {formImcRes.descricao}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="form-group">
                 <label className="form-label">Objetivos (separados por vírgula)</label>
