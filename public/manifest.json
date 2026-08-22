@@ -2,6 +2,13 @@
   "short_name": "VagnerNutri",
   "name": "Vagner Nutri — Gestão Nutricional",
   "description": "Sistema de gestão completo para nutricionistas com cadastro de pacientes, acompanhamento de consultas, anamnese, IMC e planos alimentares.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -14,12 +21,13 @@
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any"
     }
   ],
-  "start_url": "/",
-  "background_color": "#0b1120",
-  "theme_color": "#0b1120",
-  "display": "standalone",
-  "orientation": "any",
   "categories": ["health", "medical", "productivity"]
 }
