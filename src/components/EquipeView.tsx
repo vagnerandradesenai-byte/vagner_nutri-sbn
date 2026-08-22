@@ -76,7 +76,7 @@ export const EquipeView: React.FC<EquipeViewProps> = ({
       </div>
 
       {/* Grid of Nutritionists */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+      <div className="grid-responsive-3">
         {nutris.map((nutri) => {
           const isSelected = currentUser?.id === nutri.id;
           const nutrisPacientes = pacientes.filter(p => p.nutricionista_id === nutri.id || p.nutricionista_nome === nutri.nome);

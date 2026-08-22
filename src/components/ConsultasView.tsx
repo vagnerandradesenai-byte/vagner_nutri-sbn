@@ -93,7 +93,7 @@ export const ConsultasView: React.FC<ConsultasViewProps> = ({ consultas, pacient
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Top KPI Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+          <div className="grid-responsive-3">
             <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '20px', borderRadius: '14px' }}>
               <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Total de Consultas</span>
               <div style={{ fontSize: '2rem', fontWeight: 800, color: '#60a5fa', marginTop: '4px' }}>{totalConsultas}</div>
@@ -114,7 +114,7 @@ export const ConsultasView: React.FC<ConsultasViewProps> = ({ consultas, pacient
           </div>
 
           {/* Detailed Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+          <div className="grid-responsive-2">
             
             {/* Próximos Retornos Programados */}
             <div className="glass-panel" style={{ padding: '24px', borderTop: '3px solid #f59e0b' }}>

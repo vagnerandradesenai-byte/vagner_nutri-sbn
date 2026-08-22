@@ -217,7 +217,7 @@ export const PlanosView: React.FC<PlanosViewProps> = ({ planos, pacientes, onSav
       </div>
 
       {/* Plan Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+      <div className="grid-responsive-3">
         {filteredPlanos.map((plano) => {
           const exList = plano.conteudo.exercicios || [];
           const weeklyBurn = calculateTotalWeeklyBurn(exList);

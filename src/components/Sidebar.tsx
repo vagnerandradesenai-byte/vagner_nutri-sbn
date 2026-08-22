@@ -97,6 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             top: 0,
             left: 0,
             right: 0,
+            width: '100%',
             height: '60px',
             background: 'rgba(15, 23, 42, 0.95)',
             backdropFilter: 'blur(12px)',
@@ -105,6 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0 16px',
+            boxSizing: 'border-box',
             zIndex: 80,
           }}
         >

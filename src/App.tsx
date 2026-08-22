@@ -113,7 +113,7 @@ export const App: React.FC = () => {
               onSwitchNutri={handleSwitchNutri}
             />
 
-            <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '24px 20px' }}>
+            <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: isMobile ? '16px 10px' : '24px 20px', boxSizing: 'border-box', overflowX: 'hidden' }}>
               {activeTab === 'dashboard' && (
                 <DashboardView
                   user={user}

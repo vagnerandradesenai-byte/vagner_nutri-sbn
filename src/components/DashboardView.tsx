@@ -114,11 +114,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%', maxWidth: '100%' }}>
       
       {/* Welcome Banner with Tricolor Ambient Accents */}
-      <div className="glass-panel" style={{ 
-        padding: '28px 32px', 
+      <div className="glass-panel dashboard-banner" style={{ 
         background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.85) 100%)', 
         borderLeft: isMaster ? '4px solid #f59e0b' : '4px solid #3b82f6',
         borderRight: '4px solid #10b981',
@@ -135,48 +134,46 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           background: 'linear-gradient(90deg, #3b82f6 0%, #10b981 50%, #ef4444 100%)'
         }} />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-            <div style={{ background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '16px', border: '1px solid rgba(239,68,68,0.3)', boxShadow: '0 8px 20px rgba(0,0,0,0.5)' }}>
-              <CorinthiansLogo size={56} showText={true} />
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                <span className="badge badge-red" style={{ background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}>
-                  🦅 S.C. Corinthians Paulista
+        <div className="dashboard-banner-left">
+          <div style={{ background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '16px', border: '1px solid rgba(239,68,68,0.3)', boxShadow: '0 8px 20px rgba(0,0,0,0.5)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CorinthiansLogo size={52} showText={true} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="banner-badges-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+              <span className="badge badge-red" style={{ background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}>
+                🦅 S.C. Corinthians Paulista
+              </span>
+              <span className="badge badge-green"><CheckCircle2 size={12} /> Neon PostgreSQL 18</span>
+              <span className="badge badge-blue">aws-sa-east-1 (São Paulo)</span>
+              {isMaster && (
+                <span className="badge badge-amber" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Crown size={12} /> Painel Master Ativo
                 </span>
-                <span className="badge badge-green"><CheckCircle2 size={12} /> Neon PostgreSQL 18</span>
-                <span className="badge badge-blue">aws-sa-east-1 (São Paulo)</span>
-                {isMaster && (
-                  <span className="badge badge-amber" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Crown size={12} /> Painel Master Ativo
-                  </span>
-                )}
-              </div>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#ffffff', marginBottom: '6px' }}>
-                {isMaster ? 'Painel Executivo Master — Vagner Nutri' : `Painel Clínico — ${user?.nome || 'Vagner Nutri'}`}
-              </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                {isMaster 
-                  ? 'Supervisão centralizada de todos os pacientes, consultas e nutricionistas cadastrados no banco de dados Neon.' 
-                  : 'Gerencie suas consultas, acompanhe a evolução antropométrica e construa planos alimentares personalizados.'}
-              </p>
+              )}
             </div>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', marginBottom: '6px', wordBreak: 'break-word' }}>
+              {isMaster ? 'Painel Executivo Master — Vagner Nutri' : `Painel Clínico — ${user?.nome || 'Vagner Nutri'}`}
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.4' }}>
+              {isMaster 
+                ? 'Supervisão centralizada de todos os pacientes, consultas e nutricionistas cadastrados no banco de dados Neon.' 
+                : 'Gerencie suas consultas, acompanhe a evolução antropométrica e construa planos alimentares personalizados.'}
+            </p>
           </div>
+        </div>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button onClick={() => onNavigate('equipe')} className="btn-secondary">
-              <Stethoscope size={16} color="#60a5fa" /> Escolher Nutricionista
-            </button>
-            <button onClick={onOpenNovoPaciente} className="btn-primary" style={{ padding: '12px 24px' }}>
-              <Plus size={18} /> Cadastrar Paciente
-            </button>
-          </div>
+        <div className="dashboard-banner-actions">
+          <button onClick={() => onNavigate('equipe')} className="btn-secondary">
+            <Stethoscope size={16} color="#60a5fa" /> Escolher Nutricionista
+          </button>
+          <button onClick={onOpenNovoPaciente} className="btn-primary">
+            <Plus size={18} /> Cadastrar Paciente
+          </button>
         </div>
       </div>
 
       {/* --- PROMPT 3: CARDS DE INFORMAÇÃO PRINCIPAIS --- */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      <div className="grid-responsive-3">
         
         {/* Card 1 — Total de pacientes ativos */}
         <div 
@@ -193,7 +190,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <Users size={24} />
               </div>
             </div>
-            <div style={{ fontSize: '2.8rem', fontWeight: 800, color: '#ffffff' }}>{totalPacientesAtivos}</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#ffffff' }}>{totalPacientesAtivos}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#60a5fa', marginTop: '12px' }}>
             <TrendingUp size={14} /> Cadastrados por {user?.nome || 'Nutricionista Logado'}
@@ -213,7 +210,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <Calendar size={24} />
               </div>
             </div>
-            <div style={{ fontSize: '2.8rem', fontWeight: 800, color: '#ffffff' }}>{consultasDaSemana}</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#ffffff' }}>{consultasDaSemana}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#34d399', marginTop: '12px' }}>
             <Activity size={14} /> Registradas na semana atual
@@ -223,7 +220,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Card 3 — Pacientes sem retorno */}
         <div 
           className="glass-panel" 
-          style={{ padding: '24px', borderTop: '4px solid #ef4444', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gridColumn: 'span 1' }} 
+          style={{ padding: '24px', borderTop: '4px solid #ef4444', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }} 
         >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
@@ -321,7 +318,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* 4 KPIs dos Atendimentos */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+        <div className="grid-responsive-4" style={{ marginBottom: '24px' }}>
           
           <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '18px', borderRadius: '14px' }}>
             <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', fontWeight: 600 }}>Total de Consultas</span>
@@ -357,7 +354,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Grade de Análise: Categorização de IMC OMS & Volume por Nutricionista */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+        <div className="grid-responsive-2">
           
           {/* Distribuição por Perfil de IMC (OMS) */}
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '20px', borderRadius: '14px' }}>
@@ -470,7 +467,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+        <div className="grid-responsive-4">
           {nutrisList.map((nutri, index) => {
             const nutrisPacientes = pacientes.filter(p => p.nutricionista_id === nutri.id || p.nutricionista_nome === nutri.nome);
             const percentage = pacientes.length > 0 ? Math.round((nutrisPacientes.length / pacientes.length) * 100) : 0;

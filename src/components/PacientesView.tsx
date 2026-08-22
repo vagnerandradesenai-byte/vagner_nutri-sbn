@@ -259,7 +259,7 @@ export const PacientesView: React.FC<PacientesViewProps> = ({
       </div>
 
       {/* Patient Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+      <div className="grid-responsive-3">
         {filtered.map((paciente) => {
           const imcRes = calcularIMC(paciente.peso_inicial, paciente.altura);
           return (
